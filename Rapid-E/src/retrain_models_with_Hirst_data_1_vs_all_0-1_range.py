@@ -15,6 +15,14 @@ from Libraries import processing as cnv
 from Libraries import raw_lib as ral
 RAL = ral.RAW_LIB_CLASS()
 
+
+# defining parameters for training
+model_version = 'model_pollen_types_ver0'      # folder name which contains the model you want to train
+start_date = '201903200000'                     # data for training : year/month/day/hours/minutes
+end_date = '201905200559'
+pollen_type = 'BETU'                            # uppercase first four letters of pollen type (check in Hirst file if not sure)
+
+# defining necessary functions
 class preprocess:
     def normalize_image(opd, cut, normalize=False, smooth=True):
         if len(opd['Scattering']) > 3:
@@ -312,13 +320,7 @@ class Net(nn.Module):
             y_norm = y_soft[:, 0]
 
         return y_norm
-
-# defining parameters for training
-model_version = 'model_pollen_types_ver67'      # folder name which contains the model you want to train
-start_date = '201903200000'                     # data for training : year/month/day/hours/minutes
-end_date = '201905200559'
-pollen_type = 'BETU'                            # uppercase first four letters of pollen type (check in Hirst file if not sure)
-
+   
 # paths to data and model
 raw_df_path = '../data/novi_sad/DATA'
 path = 'models/novi_sad/' + model_version + '/'

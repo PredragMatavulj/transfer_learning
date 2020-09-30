@@ -263,7 +263,7 @@ for folder in folders:          # go through folders
                     # add collected data as one sample in batch list
                     data = [scatter_list, spectrum_list, lifetime_list1, lifetime_list2, size_list]
                     print(timestamp, len(data[0]))
-                    with open('../data/novi_sad_2019_pickle/' + timestamp[:13] + '.pkl', 'wb') as f:
+                    with open('../data/novi_sad_2019_/' + timestamp[:13] + '.pkl', 'wb') as f:
                         pickle.dump(data, f)
                     scatter_list, spectrum_list, lifetime_list1, lifetime_list2, size_list = [], [], [], [], []
 

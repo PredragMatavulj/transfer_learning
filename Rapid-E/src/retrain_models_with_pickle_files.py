@@ -113,7 +113,7 @@ class Net(nn.Module):
 
         return y_norm
     
-hirst = pd.read_excel("../files/HIRST_2019021601_2019101706.xlsx")
+hirst = pd.read_excel("../Libraries/HIRST_2019021601_2019101706.xlsx")
 calibs = ["2019-02-18 16", "2019-02-25 12", "2019-03-11 12", "2019-03-15 12", "2019-03-15 13", 
           "2019-03-19 07", "2019-03-19 08", "2019-03-25 08","2019-03-25 09", "2019-03-26 08", 
           "2019-03-29 08", "2019-04-04 10", "2019-04-04 11", "2019-04-09 07", "2019-04-15 07", 
@@ -136,7 +136,7 @@ hours = os.listdir('../data/novi_sad_2019')
 hours = sorted(hours)
 
 model = Net(number_of_classes)
-model.load_state_dict(torch.load('../models/' + model_name + '.pth', map_location=lambda storage, loc: storage))
+model.load_state_dict(torch.load('models/' + model_name + '.pth', map_location=lambda storage, loc: storage))
 model.cuda(GPU)
 
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
@@ -204,8 +204,8 @@ try:
                     print("Batch", batch_counter,": ", loss, " loss")
 
                     if batch_counter % 50 == 0:
-                        torch.save(model.state_dict(), '../models/retrained/Quercus/r_' + pollen_type + '_b_' + str(batch_counter) + '.pth')
-                        with open('../models/retrained/Quercus/r_' + pollen_type + '_loss.txt', "wb") as fp:
+                        torch.save(model.state_dict(), '../models_retrained_on_Hirst_data/r_' + pollen_type + '_b_' + str(batch_counter) + '.pth')
+                        with open('../models_retrained_on_Hirst_data/r_' + pollen_type + '_loss.txt', "wb") as fp:
                             pickle.dump(loss_list, fp)
 
                         plt.plot(range(batch_counter), loss_list)

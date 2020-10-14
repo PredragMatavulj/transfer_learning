@@ -176,7 +176,7 @@ pollen_type = 'AMBR'
 
 model = Net(number_of_classes)
 
-model.load_state_dict(torch.load('./models/novi_sad/model_pollen_types_ver0/' + model_name + '.pth', map_location=lambda storage, loc: storage))
+model.load_state_dict(torch.load('./models/novi_sad/model_pollen_types_ver0/' + model_name + '.pth', map_location=lambda storage, loc: storage), strict=False)
 
 #model.init_weights()
 #model.cuda(GPU)
@@ -206,24 +206,34 @@ def load_datasets(dir_path, hirst_data_path):
 
     
     train_set, valid_set = split_train_test(dir_path, hirst_data_path)
-    train_set = list(map(lambda x: x + '.pkl', train_set))
-    valid_set = list(map(lambda x: x + '.pkl', valid_set))
+    print(len(valid_set))
+    #train_set = list(map(lambda x: x + '.pkl', train_set))
+    #valid_set = list(map(lambda x: x + '.pkl', valid_set))
     
     hirst = pd.read_excel(hirst_data_path)
+    #print(hirst)
     hirst['Unnamed: 0'] = list(map(lambda x: x[:-12],list(hirst['Unnamed: 0'])))
+    #hirst['Unnamed: 0'] = hirst['Unnamed: 0'].astype(string)
 
-    
-    y_norm_train = torch.tensor(list(hirst[hirst["Unnamed: 0"].isin(train_set)]['AMBR']))
-    
+    #print(hirst)
+    y_norm_train = torch.tensor(list(hirst[hirst["Unnamed: 0"].isin(train_set)]['AMBR']), dtype=torch.float64)
+    #print(y_norm_train)
+    #print(hirst["Unnamed: 0"].isin(train_set))
     y_norm_train_mean = torch.mean(y_norm_train)
     y_norm_train_std = torch.std(y_norm_train)
-    
+    #y_norm_valid_mean = torch.mean(y_norm_valid)
+    #y_norm_valid_std = torch.std(y_norm_valid)
     
     y_norm_train = (y_norm_train - y_norm_train_mean)/y_norm_train_std
     
-    y_norm_valid = torch.tensor(list(hirst[hirst["Unnamed: 0"].isin(valid_set)]['AMBR']))
-    y_norm_valid = (y_norm_valid - y_norm_train_mean)/y_norm_train_std
-    
+    y_norm_valid = torch.tensor(list(hirst[hirst["Unnamed: 0"].isin(valid_set)]['AMBR']), dtype=torch.float64)
+    y_norm_valid_mean = torch.mean(y_norm_valid)
+    y_norm_valid_std = torch.std(y_norm_valid)
+    y_norm_valid = (y_norm_valid - y_norm_valid_mean)/y_norm_valid_std
+    #print(y_norm_valid.shape)
+    train_set = list(map(lambda x: x + '.pkl', train_set))
+    valid_set = list(map(lambda x: x + '.pkl', valid_set))
+
     for fn in train_set:
         with open(os.path.join(dir_path,fn), 'rb') as fp:
             data = pickle.load(fp)
@@ -271,13 +281,14 @@ def load_datasets(dir_path, hirst_data_path):
 
 def regularized_loss(output, y, l1_par, l2_par):
     loss = loss_fn(output, y)
-    l1_penal = 0;
-    l2_penal = 0;
+    l1_penal = 0.0;
+    l2_penal = 0.0;
     for p in model.parameters():
         l1_penal += l1_par * torch.sum(torch.abs(p))
+        #print(l1_penal.item())
         l2_penal += l2_par * torch.sum(p.data ** 2)
-    
-    loss += l1_penal + l2_penal
+        #print(l2_penal.item())
+    loss += l1_penal.item() + l2_penal.item()
     return loss
 
 def correlation(output, y):
@@ -305,7 +316,8 @@ def adam_optimizer(model, spectrum_tensor_train, scatter_tensor_train, lifetime_
         optimizer.zero_grad()
         output_train = model(spectrum_tensor_train, scatter_tensor_train, lifetime_tensor1_train, lifetime_tensor2_train, size_tensor_train, 1).double()
         output_valid = model(spectrum_tensor_valid, scatter_tensor_valid, lifetime_tensor1_valid, lifetime_tensor2_valid, size_tensor_valid, 1).double()
-        
+        print(output_train.shape)
+        print(output_valid.shape)
         loss_train = regularized_loss(output_train, y_norm_train,0,0)
         loss_valid = regularized_loss(output_valid, y_norm_valid,0,0)
         

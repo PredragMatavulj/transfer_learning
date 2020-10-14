@@ -206,7 +206,7 @@ def load_datasets(dir_path, hirst_data_path):
 
     
     train_set, valid_set = split_train_test(dir_path, hirst_data_path)
-    print(len(valid_set))
+    #print(len(valid_set))
     #train_set = list(map(lambda x: x + '.pkl', train_set))
     #valid_set = list(map(lambda x: x + '.pkl', valid_set))
     

@@ -169,11 +169,11 @@ def split_train_test(dir_path, hirst_data_path):
     valid_set += valid_set_outs
     
     train_set = sorted(train_set)
-    valid_set += sorted(valid_set)
+    valid_set = sorted(valid_set)
     #print(len(valid_set))   
     return train_set, valid_set
 
 
-#train_set, valid_set = split_train_test("../data/novi_sad_2019_", "./Libraries/HIRST_2019021601_2019101706.xlsx")
+train_set, valid_set = split_train_test("../data/novi_sad_2019_", "./Libraries/HIRST_2019021601_2019101706.xlsx")
 
 #

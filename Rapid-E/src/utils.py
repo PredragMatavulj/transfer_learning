@@ -39,10 +39,12 @@ def select_pollen(dfH, dfP):
         logging.warning(message)
         
     dfH = dfH[['HOUR'] + pollen_codes_selected]
+    dfH['HOUR'] = pd.to_datetime(dfH['HOUR'])
     return dfH
 
 def exclude_calibration_hours(dfH, dfC):
-    dfH = dfH[dfH.HOUR.isin(dfC.Time)]
+    dfC['Time'] = pd.to_datetime(dfC['Time'])
+    dfH = dfH[~dfH.HOUR.isin(dfC.Time)]
     return dfH
 
 def read_data_dir(dir_path):
@@ -51,25 +53,35 @@ def read_data_dir(dir_path):
     for fname in fnames:
         fp = os.path.join(dir_path,fname)
         if os.path.exists(fp):
-            data = pickle.load(fp)
-            dt.append([datetime.datetime.strptime(fname[-4] + ':00:00', '%Y-%m-%d %H:%M:%S'),fname, len(data[0])])
+            with open(fp, 'rb') as file:
+                data = pickle.load(file)
+                #print(fname[:-4])
+                dt.append([datetime.datetime.strptime(fname[:-4] + ':00:00', '%Y-%m-%d %H:%M:%S'),fname, len(data[0])])
     df = pd.DataFrame(dt, columns = ['HOUR','FILENAME', 'TOTAL'])
     return df
 
 def join_hirst_rapid_data(dfH,dfR):
     pollen_codes = dfH.columns[1:]
-    df = dfH.join(dfR,on='HOUR',how='inner').reindex(columns=['HOUR', 'FILENAME', 'TOTAL'] + pollen_codes)
+    dfH = dfH.set_index('HOUR')
+    dfR = dfR.set_index('HOUR')
+    df = pd.merge(dfH,dfR, how='inner', left_index=True, right_index=True)
+    df['HOUR'] = df.index
+    df.reset_index(drop=True, inplace=True)
+    df = df[['HOUR', 'FILENAME', 'TOTAL'] + list(pollen_codes)]
     return df
 
 def set_time_resolution(df, res='hour'):
     if res == 'hour':
         return df
     elif res == 'day':
+        colnames = ['TOTAL'] + list(df.columns[3:])
         df['DATE'] = list(map(lambda x: x.date(), df['HOUR']))
-        colnames = ['TOTAL'] + df.columns[3:]
+        
         gr = df.groupby('DATE').filter(lambda x: len(x['HOUR']) == 24).groupby('DATE')
         df = gr[colnames].sum()
         df['DATE'] = df.index
+        df.reset_index(drop=True, inplace=True)
+        df = df[['DATE'] + colnames]
         return df
     else:
         raise RuntimeError(f'{res} is not supported aggregation method.')

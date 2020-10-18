@@ -8,12 +8,13 @@ import os
 import pandas as pd
 import logging
 import datetime
+import pickle
 
 def open_excel_file_in_pandas(file_path):
     try:
         df = pd.read_excel(file_path, header=0)
     except FileNotFoundError:
-        raise error(f'File {file_path} does not exist. Please, provide correct filepath.')
+        raise RuntimeError(f'File {file_path} does not exist. Please, provide correct filepath.')
     return df
 
 def save_pandas_to_excel_file(df,file_path):
@@ -45,10 +46,11 @@ def exclude_calibration_hours(dfH, dfC):
     return dfH
 
 def read_data_dir(dir_path):
-    fnames = os.listdir(dirpath)
+    fnames = os.listdir(dir_path)
     dt = [];
     for fname in fnames:
-        if os.path.exists(os.path.join(dir_path,fname)):
+        fp = os.path.join(dir_path,fname)
+        if os.path.exists(fp):
             data = pickle.load(fp)
             dt.append([datetime.datetime.strptime(fname[-4] + ':00:00', '%Y-%m-%d %H:%M:%S'),fname, len(data[0])])
     df = pd.DataFrame(dt, columns = ['HOUR','FILENAME', 'TOTAL'])
@@ -70,7 +72,7 @@ def set_time_resolution(df, res='hour'):
         df['DATE'] = df.index
         return df
     else:
-        raise error(f'{res} is not supported aggregation method.')
+        raise RuntimeError(f'{res} is not supported aggregation method.')
         
 
 

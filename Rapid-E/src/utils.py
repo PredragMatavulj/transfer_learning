@@ -9,6 +9,12 @@ import pandas as pd
 import logging
 import datetime
 import pickle
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import StratifiedShuffleSplit
+
 
 def open_excel_file_in_pandas(file_path):
     try:
@@ -18,7 +24,7 @@ def open_excel_file_in_pandas(file_path):
     return df
 
 def save_pandas_to_excel_file(df,file_path):
-    df.to_excel(file_path)
+    df.to_excel(file_path, index=False)
 
 def select_pollen(dfH, dfP):
     pollen_codes = list(dfP['CODE'])
@@ -86,9 +92,54 @@ def set_time_resolution(df, res='hour'):
     else:
         raise RuntimeError(f'{res} is not supported aggregation method.')
         
+def count_elements(clusters,num_cl):
+    sizes = [0]*num_cl
+    for x in clusters:
+        sizes[x] += 1
+    return sizes
 
+def num_of_clusters(silhouette_avgs, min_sizes):
+    for i in range(len(silhouette_avgs)):
+        if (min_sizes[i] < 10):
+            silhouette_avgs[i] = 0
+    return np.argmax(np.array(silhouette_avgs))
 
+    
 
+def cluster_analysis_of_dataset(df, pollen_types, num_clust = 50):
+    cols = ['TOTAL'] + pollen_types
+    X = np.array(df[cols])
+    scaler = MinMaxScaler()
+    X = scaler.fit_transform(X)
+    silhouette_avgs = []
+    min_sizes = []
+    labels = []
+    for nc in range(2,num_clust+1,1):
+        kmeans = KMeans(n_clusters=nc)
+        clusters = kmeans.fit(X)
+        silhouette_avgs.append(silhouette_score(X, clusters.labels_))
+        sizes = count_elements(clusters.labels_,nc)
+        min_sizes.append(np.argmin(np.array(sizes)))
+        labels.append(clusters.labels_)
+    num_cl = num_of_clusters(silhouette_avgs, min_sizes)
+    #print(silhouette_avgs)
+    #print(min_sizes)
+    print(f"Optimal number of clusters: {num_cl+2}")
+    #kmeans = KMeans(n_clusters=num_cl)
+    #clusters = kmeans.fit(X)
+    return labels[num_cl]
+
+def assign_clusters(df, pollen_types_train, clusters):
+    df['CLUSTER'] = clusters
+    return df
+        
+    
+def train_test_split(groups, num_splits = 10):
+    X = np.array(range(len(groups)))
+    y = groups
+    split = StratifiedShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
+    return split.split(X, y)
+    
 
 
 

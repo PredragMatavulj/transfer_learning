@@ -14,7 +14,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import StratifiedShuffleSplit
-
+import json
+import itertools
+import torch
 
 def open_excel_file_in_pandas(file_path):
     try:
@@ -166,7 +168,39 @@ def load_dataset(dir_path, hirst_data_path, calib_info_path, pollen_info_path, p
     labels = cluster_analysis_of_dataset(df, pollen_types)
     logging.info('Cluster analysis of selected pollen types finished.')
     df = assign_clusters(df, pollen_types, labels)
+    df['MONTH'] = list(map(lambda x: x.month, list(df['HOUR'])))
+    df =  df[['MONTH','HOUR', 'FILENAME', 'CLUSTER'] + pollen_types]
     return df
+
+def gridsearch_hparam_from_json(filepath):
+    with open(filepath) as file:
+        hps = json.load(file)
+        
+    values = []
+    hpnames = []
+    for hpname in hps:
+        values.append(hps[hpname])
+        hpnames.append(hpname)
+    
+    comb = []
+    for element in itertools.product(*values):
+        hp = {}
+        for i, hpname in enumerate(hpnames):
+            hp[hpname] = element[i]
+        comb.append(hp)
+    return comb
+
+
+def my_collate(batch):
+    data = [item[0] for item in batch]
+    target = [item[1] for item in batch]
+    target = torch.LongTensor(target)
+    return [data, target]
+            
+            
+    
+    
+        
     
 
 

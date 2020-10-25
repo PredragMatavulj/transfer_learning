@@ -168,8 +168,8 @@ class Experiment:
         outer = torch.zeros(self.args['num_of_test_splits'])
         for i, (train_valid_data, test_data) in enumerate(train_valid_test):
             print('Fold ' + str(i+1))
-            print('Train dataset: ' + len(train_valid_data))
-            print('Test dataset: ' + len(test_data))
+            print('Train dataset: ' + str(len(train_valid_data)))
+            print('Test dataset: ' + str(len(test_data)))
             # train model
             
             df_train_valid = self.df.iloc[sorted(train_valid_data)]

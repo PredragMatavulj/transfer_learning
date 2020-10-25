@@ -6,5 +6,5 @@ save_non_project_files = False
 
 [main]
 version = 0.2.0
-recent_files = ['Rapid-E\\src\\utils.py', 'Rapid-E\\src\\experiment.py', 'Rapid-E\\src\\dataset.py', 'Rapid-E\\src\\model.py', '..\\..\\Users\\Korisnik\\anaconda3\\lib\\site-packages\\torch\\nn\\functional.py', 'Rapid-E\\src\\objectives.py']
+recent_files = ['Rapid-E\\src\\utils.py', 'Rapid-E\\src\\dataset.py', 'Rapid-E\\src\\model.py', 'Rapid-E\\src\\objectives.py', 'Rapid-E\\src\\experiment.py']
 

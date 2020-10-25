@@ -123,7 +123,7 @@ class Experiment:
         for dset in ['train', 'valid']:
             for criteria in [self.criteria['objective_criteria']] + self.criteria['additional_criteria']:
                 self.train_dict[dset][criteria.name] = {'epochs_sum': torch.zeros(num_of_epochs), 
-                                                            'epoch_mean': torch.zeros(num_of_epochs),
+                                                            'epochs_mean': torch.zeros(num_of_epochs),
                                                             'best_value': float('inf') if criteria.sense == 'min' else float('-inf'),
                                                              }
     
@@ -301,25 +301,25 @@ class Experiment:
     def update_best_model_for_each_criteria(self, traindataset_name, valid_dataset_name, hp, epoch_idx, save_model):
         for criteria in [self.args['objective_criteria']] + self.args['additional_criteria']:
             if criteria.sense == 'min':
-                if  self.train_dict['train'][criteria.name]['epoch_'+criteria.reduction][epoch_idx] <  self.train_dict['train'][criteria.name]['best_value']:
-                    self.train_dict['train'][criteria.name]['best_value'] =  self.train_dict['train'][criteria.name]['epoch_'+criteria.reduction][epoch_idx]
+                if  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx] <  self.train_dict['train'][criteria.name]['best_value']:
+                    self.train_dict['train'][criteria.name]['best_value'] =  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx]
                     if save_model:
                             self.save_model_state(hp, epoch_idx, traindataset_name, 'train')
                 if valid_dataset_name:
-                    if  self.train_dict['valid'][criteria.name]['epoch_'+criteria.reduction][epoch_idx] <  self.train_dict['valid'][criteria.name]['best_value']:
-                        self.train_dict['valid'][criteria.name]['best_value'] =  self.train_dict['valid'][criteria.name]['epoch_'+criteria.reduction][epoch_idx]
+                    if  self.train_dict['valid'][criteria.name]['epochs_'+criteria.reduction][epoch_idx] <  self.train_dict['valid'][criteria.name]['best_value']:
+                        self.train_dict['valid'][criteria.name]['best_value'] =  self.train_dict['valid'][criteria.name]['epochs_'+criteria.reduction][epoch_idx]
                         if save_model:
                                 self.save_model_state(hp, epoch_idx, valid_dataset_name, 'valid')      
             else:
-                if  self.train_dict['train'][criteria.name]['epoch_'+criteria.reduction][epoch_idx] >  self.train_dict['train'][criteria.name]['best_value']:
-                    self.train_dict['train'][criteria.name]['best_value'] =  self.train_dict['train'][criteria.name]['epoch_'+criteria.reduction][epoch_idx]
+                if  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx] >  self.train_dict['train'][criteria.name]['best_value']:
+                    self.train_dict['train'][criteria.name]['best_value'] =  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx]
                     if save_model:
                             self.save_model_state(hp, epoch_idx, traindataset_name, 'train')
                 
                 if valid_dataset_name:
                 
-                    if  self.train_dict['valid'][criteria.name]['epoch_'+criteria.reduction][epoch_idx] >  self.train_dict['valid'][criteria.name]['best_value']:
-                        self.train_dict['valid'][criteria.name]['best_value'] =  self.train_dict['valid'][criteria.name]['epoch_'+criteria.reduction][epoch_idx]
+                    if  self.train_dict['valid'][criteria.name]['epochs_'+criteria.reduction][epoch_idx] >  self.train_dict['valid'][criteria.name]['best_value']:
+                        self.train_dict['valid'][criteria.name]['best_value'] =  self.train_dict['valid'][criteria.name]['epochs_'+criteria.reduction][epoch_idx]
                         if save_model:
                                 self.save_model_state(hp, epoch_idx, valid_dataset_name, 'valid')
                             

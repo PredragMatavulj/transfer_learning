@@ -174,6 +174,6 @@ def split_train_test(dir_path, hirst_data_path):
     return train_set, valid_set
 
 
-train_set, valid_set = split_train_test("../data/novi_sad_2019_", "./Libraries/HIRST_2019021601_2019101706.xlsx")
+#train_set, valid_set = split_train_test("../data/novi_sad_2019_", "./Libraries/HIRST_2019021601_2019101706.xlsx")
 
 #

@@ -308,7 +308,7 @@ def adam_optimizer(model, spectrum_tensor_train, scatter_tensor_train, lifetime_
     optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=4, factor=0.5, verbose=True)
     prev_loss = 0;
-    
+    print(sum([x.shape[0] for x in spectrum_tensor_train]))
     
     
     while(i <= maxiter):

@@ -6,7 +6,7 @@ Created on Sun Oct 18 22:50:05 2020
 """
 import torch as th
 
-class Sampler(object):
+class Sampler(th.utils.data.sampler.Sampler):
     """Base class for all Samplers.
     Every Sampler subclass has to provide an __iter__ method, providing a way
     to iterate over indices of dataset elements, and a __len__ method that

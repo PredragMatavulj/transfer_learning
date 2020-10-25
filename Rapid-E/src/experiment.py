@@ -80,7 +80,7 @@ class Experiment:
     def set_model(self, hp, model_path = None):
         
         if self.args['model'] == 'RapidENet':
-            self.model = RapidENet(dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes'])
+            self.model = RapidENet(dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes']).float()
             if model_path:
                 self.model.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage), strict=False)
             else:
@@ -92,7 +92,7 @@ class Experiment:
         
     def set_optimizer(self, hp):
         if hp['optimizer'] == 'adam':
-            self.optimizer = optim.AdamW(self.model.parameters(), lr = hp['lr'], weight_decay=hp['weight_decay'])
+            self.optimizer = optim.Adam(self.model.parameters(), lr = hp['lr'], weight_decay=hp['weight_decay'])
             #self.scheduler = torch.optim.lr_scheduler.CyclicLR(self.optimizer, base_lr=hp['lr']/10, max_lr=hp['lr'])
             self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, patience=4, factor=0.5, verbose=False)
             
@@ -345,5 +345,5 @@ class Experiment:
         
         
         
-        
-        
+exp1 = Experiment(args)
+exp1.nested_crossvalidation()

@@ -64,8 +64,7 @@ class RapidEDataset(Dataset):
             X[3] = torch.Tensor(X[3])
             X[4] = torch.Tensor(X[4]).unsqueeze_(0).permute(1, 0)
             y = torch.tensor(np.array(list(self.df.iloc[idx,4:(4+self.num_of_classes)])),dtype=torch.float64)
-            w = torch.tensor(np.array(list(self.df.iloc[idx,(4+self.num_of_classes):])),dtype=torch.float64)
-
+            w = torch.from_numpy(np.array(list(self.df.iloc[idx,(4+self.num_of_classes):])).astype(np.float32))
             #print(y)
             #print(y)
             #w = np.array(list(self.df.iloc[idx,(4+len(self.pollen_types)):]))

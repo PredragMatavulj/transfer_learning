@@ -151,18 +151,25 @@ class Experiment:
         self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_sum'][epoch_idx] += batch_loss
         if (batch_idx == num_of_batches - 1):
                self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_sum'][epoch_idx] / num_of_batches      
-        for criteria in self.criteria['additional_criteria']:
-            batch_loss = criteria(output,target,weights)
-            self.train_dict[dataset_type][criteria.name]['epochs_sum'][epoch_idx] += batch_loss
+        for crt in self.criteria['additional_criteria']:
+            batch_loss = crt(output,target,weights)
+            self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] += batch_loss
             if (batch_idx == num_of_batches - 1):
-                self.train_dict[dataset_type][criteria.name]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][self.criteria.name]['epochs_sum'][epoch_idx] / num_of_batches
+                self.train_dict[dataset_type][crt.name]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] / num_of_batches
 
     def nested_crossvalidation(self):
+        if self.logging:
+            print('Nested crossvalidation started.')
+            print('Number of trin_valid-test splits: ' + str(self.args['num_of_test_splits']))
+            print('Number of train-valid splits:' + str(self.args['num_of_valid_splits']))
+        
         test_split_groups = np.array(list(self.df['CLUSTER']))
         train_valid_test = train_test_split(test_split_groups, num_splits = self.args['num_of_test_splits'])
         outer = torch.zeros(self.args['num_of_test_splits'])
         for i, (train_valid_data, test_data) in enumerate(train_valid_test):
-            
+            print('Fold ' + str(i+1))
+            print('Train dataset: ' + len(train_valid_data))
+            print('Test dataset: ' + len(test_data))
             # train model
             
             df_train_valid = self.df.iloc[sorted(train_valid_data)]

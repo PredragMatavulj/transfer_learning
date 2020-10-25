@@ -38,9 +38,9 @@ args = {
 'hparam_search_strategy': 'gridsearch',
 'num_of_valid_splits': 2,
 'num_of_test_splits': 2,
-'train_batch_size': 10,
-'valid_batch_size': 10,
-'test_batch_size': 10,
+'train_batch_size': 500,
+'valid_batch_size': 100,
+'test_batch_size': 100,
 'model': 'RapidENet',
 'pretrained_model_state_path': './models/novi_sad/model_pollen_types_ver0/Ambrosia_vs_all.pth',
 'number_of_classes': 2,
@@ -150,12 +150,12 @@ class Experiment:
         batch_loss = self.criteria['objective_criteria'](output, target, weights)
         self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_sum'][epoch_idx] += batch_loss
         if (batch_idx == num_of_batches - 1):
-               self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][self.criteria['name']]['epochs_sum'][epoch_idx] / num_of_batches      
+               self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_sum'][epoch_idx] / num_of_batches      
         for criteria in self.criteria['additional_criteria']:
             batch_loss = criteria(output,target,weights)
             self.train_dict[dataset_type][criteria.name]['epochs_sum'][epoch_idx] += batch_loss
             if (batch_idx == num_of_batches - 1):
-                self.train_dict[dataset_type][criteria.name]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][self.criteria['name']]['epochs_sum'][epoch_idx] / num_of_batches
+                self.train_dict[dataset_type][criteria.name]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][self.criteria.name]['epochs_sum'][epoch_idx] / num_of_batches
 
     def nested_crossvalidation(self):
         test_split_groups = np.array(list(self.df['CLUSTER']))
@@ -265,7 +265,18 @@ class Experiment:
             
             
             self.update_best_model_for_each_criteria(train_loader.dataset.name, valid_loader.dataset.name if valid_loader != None else None, hp, epoch, save_model)
-
+            
+            #print epoch results from statedict
+            
+            for ds in ['train', 'valid']:
+                print("\t\t" + ds + ":")
+                for cn in [self.args['objective_criteria']] + self.args['additional_criteria']:
+                    print('\t\t\t' + cn + ': ' + str(self.train_dict[ds][cn]['epochs_mean']))
+            
+            
+            
+            
+            
         
         if valid_loader:
             return self.train_dict['valid'][self.args['selection_criteria']]['best_value']

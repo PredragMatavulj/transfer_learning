@@ -102,7 +102,7 @@ def count_elements(clusters,num_cl):
 
 def num_of_clusters(silhouette_avgs, min_sizes):
     for i in range(len(silhouette_avgs)):
-        if (min_sizes[i] < 10):
+        if (min_sizes[i] < 50):
             silhouette_avgs[i] = 0
     return np.argmax(np.array(silhouette_avgs))
 

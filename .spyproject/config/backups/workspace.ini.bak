@@ -6,5 +6,5 @@ save_non_project_files = False
 
 [main]
 version = 0.2.0
-recent_files = ['Rapid-E\\src\\data_loader.py', 'Rapid-E\\src\\type_runner.py', 'Rapid-E\\src\\utils.py']
+recent_files = ['Rapid-E\\src\\utils.py', 'Rapid-E\\src\\experiment.py', 'Rapid-E\\src\\dataset.py', 'Rapid-E\\src\\model.py']
 

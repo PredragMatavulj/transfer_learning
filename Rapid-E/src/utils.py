@@ -14,7 +14,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import StratifiedShuffleSplit
-
+import json
+import itertools
+import torch
 
 def open_excel_file_in_pandas(file_path):
     try:
@@ -129,8 +131,9 @@ def cluster_analysis_of_dataset(df, pollen_types, num_clust = 50):
     #clusters = kmeans.fit(X)
     return labels[num_cl]
 
-def assign_clusters(df, pollen_types_train, clusters):
+def assign_clusters(df, pollen_types, clusters):
     df['CLUSTER'] = clusters
+    df = df[['HOUR', 'FILENAME', 'CLUSTER'] + pollen_types]
     return df
         
     
@@ -139,6 +142,66 @@ def train_test_split(groups, num_splits = 10):
     y = groups
     split = StratifiedShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
     return split.split(X, y)
+
+
+
+def load_dataset(dir_path, hirst_data_path, calib_info_path, pollen_info_path, pollen_types, time_res = 'hour'):
+    dfH = open_excel_file_in_pandas(hirst_data_path)
+    dfC = open_excel_file_in_pandas(calib_info_path)
+    dfP = open_excel_file_in_pandas(pollen_info_path)
+    logging.info('Pollen selection started.')
+    dfH = select_pollen(dfH, dfP)
+    logging.info('Pollen selection finished.')
+    logging.info('Removing calibration hours started.')
+    dfH = exclude_calibration_hours(dfH, dfC)
+    logging.info('Removing calibration hours finished.')
+    logging.info(f'Counting of particles per hour in RapidE data in directory {dir_path} started.')
+    dfR = read_data_dir(dir_path)
+    logging.info(f'Counting of particles per hour in RapidE data in directory {dir_path} finished.')
+    logging.info('Joining of Hirst and RapidE data started.')
+    df = join_hirst_rapid_data(dfH, dfR)
+    logging.info('Joining of Hirst and RapidE data finished.')
+    logging.info(f'Adjasting of time resolution to {time_res} started.')
+    df = set_time_resolution(df,time_res)
+    logging.info(f'Adjasting of time resolution to {time_res} finished.')
+    logging.info('Cluster analysis of selected pollen types started.')
+    labels = cluster_analysis_of_dataset(df, pollen_types)
+    logging.info('Cluster analysis of selected pollen types finished.')
+    df = assign_clusters(df, pollen_types, labels)
+    df['MONTH'] = list(map(lambda x: x.month, list(df['HOUR'])))
+    df =  df[['MONTH','HOUR', 'FILENAME', 'CLUSTER'] + pollen_types]
+    return df
+
+def gridsearch_hparam_from_json(filepath):
+    with open(filepath) as file:
+        hps = json.load(file)
+        
+    values = []
+    hpnames = []
+    for hpname in hps:
+        values.append(hps[hpname])
+        hpnames.append(hpname)
+    
+    comb = []
+    for element in itertools.product(*values):
+        hp = {}
+        for i, hpname in enumerate(hpnames):
+            hp[hpname] = element[i]
+        comb.append(hp)
+    return comb
+
+
+def my_collate(batch):
+    data = [item[0] for item in batch]
+    target = torch.cat([item[1] for item in batch], dim=0)
+    target = (target - torch.mean(target, dim=0))/torch.std(target,dim=0)
+    weights = torch.cat([item[2] for item in batch], dim=0)
+    return [data, target, weights]
+            
+            
+    
+    
+        
     
 
 

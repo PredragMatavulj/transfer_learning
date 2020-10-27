@@ -17,6 +17,8 @@ from sklearn.model_selection import StratifiedShuffleSplit
 import json
 import itertools
 import torch
+#from clustering.equal_groups import EqualGroupsKMeans
+
 
 def open_excel_file_in_pandas(file_path):
     try:
@@ -102,7 +104,7 @@ def count_elements(clusters,num_cl):
 
 def num_of_clusters(silhouette_avgs, min_sizes):
     for i in range(len(silhouette_avgs)):
-        if (min_sizes[i] < 25):
+        if (min_sizes[i] < 50):
             silhouette_avgs[i] = 0
     return np.argmax(np.array(silhouette_avgs))
 
@@ -130,6 +132,30 @@ def cluster_analysis_of_dataset(df, pollen_types, num_clust = 30):
     #kmeans = KMeans(n_clusters=num_cl)
     #clusters = kmeans.fit(X)
     return labels[num_cl]
+
+
+# def cluster_analysis_of_dataset_equal_clustersizes(df, pollen_types, num_clust = 3):
+#     cols = pollen_types
+#     X = np.array(df[cols])
+#     scaler = MinMaxScaler()
+#     X = scaler.fit_transform(X)
+#     #silhouette_avgs = []
+#     #min_sizes = []
+#     #labels = []
+#     #for nc in range(2,num_clust+1,1):
+#     kmeans = EqualGroupsKMeans(n_clusters=num_clust)
+#     clusters = kmeans.fit(X)
+#     #silhouette_avgs.append(silhouette_score(X, clusters.labels_))
+#     #sizes = count_elements(clusters.labels_,nc)
+#     #min_sizes.append(np.argmin(np.array(sizes)))
+#     #labels.append(clusters.labels_)
+#     #num_cl = num_of_clusters(silhouette_avgs, min_sizes)
+#     #print(silhouette_avgs)
+#     #print(min_sizes)
+#     #print(f"Optimal number of clusters: {num_cl+2}")
+#     #kmeans = KMeans(n_clusters=num_cl)
+#     #clusters = kmeans.fit(X)
+#     return clusters.labels_
 
 def assign_clusters(df, pollen_types, clusters):
     df['CLUSTER'] = clusters

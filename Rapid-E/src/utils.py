@@ -134,6 +134,39 @@ def cluster_analysis_of_dataset(df, pollen_types, num_clust = 30):
     return labels[num_cl]
 
 
+def clusters_from_seasons(df, pollen_types, df_pollen_info):
+    
+    inc = np.zeros((len(pollen_types), 12))
+    for i,tp in enumerate(pollen_types):
+        start = list(df_pollen_info[df_pollen_info.CODE == tp]['START'])[0]
+        end = list(df_pollen_info[df_pollen_info.CODE == tp]['END'])[0]
+        inc[i,(start-1):end] = 1
+
+    #prev = inc[:,0]
+    clusters = [[0]]
+    
+    for i in range(1,12):
+        found = False
+        for cluster in clusters:
+            if np.array_equal(inc[:,i], inc[:,cluster[0]]):
+                cluster.append(i)
+                found = True
+                break 
+        if not found:
+           clusters.append([i])
+           
+    labels = []
+    months = list(map(lambda x: x-1, list(df['MONTH'])))
+    for x in months:
+        for j,cl in enumerate(clusters):
+            if x in cl:
+                labels.append(j)
+                break
+    return labels
+        
+          
+        
+
 # def cluster_analysis_of_dataset_equal_clustersizes(df, pollen_types, num_clust = 3):
 #     cols = pollen_types
 #     X = np.array(df[cols])
@@ -159,7 +192,7 @@ def cluster_analysis_of_dataset(df, pollen_types, num_clust = 30):
 
 def assign_clusters(df, pollen_types, clusters):
     df['CLUSTER'] = clusters
-    df = df[['HOUR', 'FILENAME', 'CLUSTER'] + pollen_types]
+    df = df[['MONTH', 'HOUR', 'FILENAME', 'CLUSTER'] + pollen_types]
     return df
         
     
@@ -190,12 +223,12 @@ def load_dataset(dir_path, hirst_data_path, calib_info_path, pollen_info_path, p
     logging.info(f'Adjasting of time resolution to {time_res} started.')
     df = set_time_resolution(df,time_res)
     logging.info(f'Adjasting of time resolution to {time_res} finished.')
+    df['MONTH'] = list(map(lambda x: x.month, list(df['HOUR'])))
     logging.info('Cluster analysis of selected pollen types started.')
-    labels = cluster_analysis_of_dataset(df, pollen_types)
+    labels = clusters_from_seasons(df, pollen_types, dfP)
     logging.info('Cluster analysis of selected pollen types finished.')
     df = assign_clusters(df, pollen_types, labels)
-    df['MONTH'] = list(map(lambda x: x.month, list(df['HOUR'])))
-    df =  df[['MONTH','HOUR', 'FILENAME', 'CLUSTER'] + pollen_types]
+    #df =  df[['MONTH','HOUR', 'FILENAME', 'CLUSTER'] + pollen_types]
     return df
 
 def gridsearch_hparam_from_json(filepath):

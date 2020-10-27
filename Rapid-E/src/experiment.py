@@ -306,7 +306,7 @@ class Experiment:
         torch.save( state, os.path.join(self.model_dir_path,self.create_file_name(hp,dataset_name,criteria_name, dataset_type)))
     
     def update_best_model_for_each_criteria(self, traindataset_name, valid_dataset_name, hp, epoch_idx, save_model):
-        for criteria in [self.args['objective_criteria']] + self.args['additional_criteria']:
+        for criteria in [self.criteria['objective_criteria']] + self.criteria['additional_criteria']:
             if criteria.sense == 'min':
                 if  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx] <  self.train_dict['train'][criteria.name]['best_value']:
                     self.train_dict['train'][criteria.name]['best_value'] =  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx]

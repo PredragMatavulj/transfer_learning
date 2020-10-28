@@ -54,9 +54,9 @@ class RapidEDataset(Dataset):
         
         #self.transform = transform
     def load_to_torch_tensor(self):
-        fnames = list(self.df['FILEPATH'])
+        fnames = list(self.df['FILENAME'])
         for fn in fnames:
-             with open(os.path.join(self.dir_path, fn, 'rb')) as file:
+             with open(os.path.join(self.dir_path, fn),'rb') as file:
                 X = pickle.load(file)
                 X[0] = torch.Tensor(X[0]).unsqueeze_(0).permute(1, 0, 2, 3)
                 X[1] = torch.Tensor(X[1]).unsqueeze_(0).permute(1, 0, 2, 3)

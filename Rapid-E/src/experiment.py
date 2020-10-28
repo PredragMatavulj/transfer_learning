@@ -130,7 +130,7 @@ class Experiment:
     def prepare_data_loader(self, dframe, batch_size, dataset_name):
         dataset = RapidEDataset(dframe, self.args['data_dir_path'], self.df_pollen_types, name = dataset_name)
         stratified_train_sampler = StratifiedSampler(torch.from_numpy(np.array(list(dframe['CLUSTER']))), batch_size)
-        return DataLoader(dataset, batch_size=batch_size, sampler = stratified_train_sampler, collate_fn=my_collate)
+        return DataLoader(dataset, batch_size=batch_size, num_workers = 2, sampler = stratified_train_sampler, collate_fn=my_collate)
 
     
     def tune_hparam(self, inner):

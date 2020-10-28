@@ -45,7 +45,8 @@ args = {
 'pretrained_model_state_path': './models/novi_sad/model_pollen_types_ver0/Ambrosia_vs_all.pth',
 'number_of_classes': 2,
 'logging_per_batch': True,
-'logging': True
+'logging': True,
+'load_entire_dataset' : True,
 }
 
 
@@ -128,7 +129,7 @@ class Experiment:
                                                              }
     
     def prepare_data_loader(self, dframe, batch_size, dataset_name):
-        dataset = RapidEDataset(dframe, self.args['data_dir_path'], self.df_pollen_types, name = dataset_name)
+        dataset = RapidEDataset(dframe, self.args['data_dir_path'], self.df_pollen_types, load=self.args['load_entire_dataset'], name = dataset_name)
         stratified_train_sampler = StratifiedSampler(torch.from_numpy(np.array(list(dframe['CLUSTER']))), batch_size)
         return DataLoader(dataset, batch_size=batch_size, sampler = stratified_train_sampler, collate_fn=my_collate)
 

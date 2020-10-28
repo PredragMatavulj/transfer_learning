@@ -13,6 +13,7 @@ import torch
 import logging
 import datetime
 import pandas as pd
+from torch import nn
 #from torch import nn
 #import matplotlib.pyplot as plt
 #import functools as fnc
@@ -47,6 +48,7 @@ args = {
 'logging_per_batch': True,
 'logging': True,
 'load_entire_dataset' : True,
+'GPU': True
 }
 
 
@@ -75,6 +77,8 @@ class Experiment:
         self.train_dict = None;
         self.logging = self.args['logging']
         self.logging_per_batch = self.args['logging_per_batch']
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+ 
     
     
     
@@ -86,6 +90,9 @@ class Experiment:
                 self.model.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage), strict=False)
             else:
                 self.model.load_state_dict(torch.load(self.args['pretrained_model_state_path'], map_location=lambda storage, loc: storage), strict=False)
+            if self.args['GPU']:
+                self.model = nn.DataParallel(self.model)
+                self.model = self.model.to(self.device)
         else:
             raise RuntimeError('Only RapidENet is implemented.')
         
@@ -147,14 +154,9 @@ class Experiment:
 
             
     def update_batch_info(self, dataset_type, output, target, weights, batch_idx, epoch_idx, num_of_batches):
-        
-        batch_loss = self.criteria['objective_criteria'](output, target, weights)
-        self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_sum'][epoch_idx] += batch_loss
-        if (batch_idx == num_of_batches - 1):
-               self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_sum'][epoch_idx] / num_of_batches      
-        for crt in self.criteria['additional_criteria']:
+        for crt in [self.criteria['objective_criteria'](output, target, weights)] + self.criteria['additional_criteria']:
             batch_loss = crt(output,target,weights)
-            self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] += batch_loss
+            self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] += batch_loss.item()
             if (batch_idx == num_of_batches - 1):
                 self.train_dict[dataset_type][crt.name]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] / num_of_batches
 
@@ -248,20 +250,26 @@ class Experiment:
                 #print(train_batch[0][0][1].shape)
                 
                 train_batch_data, train_batch_target, train_batch_weights = train_batch
-                #print(train_batch_target)
-                #print(train_batch_weights)
+                
+                train_batch_data = train_batch_data.to(self.device)
+                train_batch_target = train_batch_target.to(self.device)
+                train_batch_weights = train_batch_weights.to(self.device)
+                
+                train_batch_output = self.model(train_batch_data)
+                objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
                 
                 
                 self.optimizer.zero_grad()
-                train_batch_output = self.model(train_batch_data)
-                #print(train_batch_output)
-                objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
+                
+                
                 objective_batch_loss.backward()
                 
-                self.update_batch_info('train', train_batch_output, train_batch_target, train_batch_weights, i, epoch, len(train_loader))
                 
                 self.optimizer.step(lambda: objective_batch_loss)
                 self.scheduler.step(objective_batch_loss)
+                
+                self.update_batch_info('train', train_batch_output, train_batch_target, train_batch_weights, i, epoch, len(train_loader))
+
 
             # iterating on valid batches
             self.model.eval()

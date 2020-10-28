@@ -9,31 +9,31 @@ import torch
 from torch import nn
 
 
-class Conv2DExt(nn.Conv2d):
-    def __init__(self,in_channels, out_channels, kernel_size):
-        super().__init__(self, in_channels, out_channels, kernel_size)
-    def forward(self, input, output_size=None):
-        if input.ndimensions() == 5:
-            BI, FI, CI, HI, WI = input.shape
-            input = input.view(-1, CI, HI, WI)
-            output = super().forward(input, output_size=output_size)
-            BFO, CO, HO, WO = output.shape
-            output=output.view(BI, FI, CO, HO, WO)
-        else:
-            output = super().forward(input, output_size=output_size)
+# class Conv2DExt(nn.Conv2d):
+#     def __init__(self,in_channels, out_channels, kernel_size):
+#         super().__init__(self, in_channels, out_channels, kernel_size)
+#     def forward(self, input, output_size=None):
+#         if input.ndimensions() == 5:
+#             BI, FI, CI, HI, WI = input.shape
+#             input = input.view(-1, CI, HI, WI)
+#             output = super().forward(input, output_size=output_size)
+#             BFO, CO, HO, WO = output.shape
+#             output=output.view(BI, FI, CO, HO, WO)
+#         else:
+#             output = super().forward(input, output_size=output_size)
              
             
-        return output
+#         return output
 
-class Conv2DExt2(nn.Module):
-    def __init__(self,*args,**kwargs):
-        super().__init__(self)
-        self.conv2d = nn.ConvTranspose2d(*args,**kwargs)
-    def forward(self, input, output_size=None):
-        if input.ndimensions() == 5:
-            B, F, C, H, W = input.shape
-            input = input.view(-1, C, H, W)
-        return self.conv2d(input, output_size=output_size)
+# class Conv2DExt2(nn.Module):
+#     def __init__(self,*args,**kwargs):
+#         super().__init__(self)
+#         self.conv2d = nn.ConvTranspose2d(*args,**kwargs)
+#     def forward(self, input, output_size=None):
+#         if input.ndimensions() == 5:
+#             B, F, C, H, W = input.shape
+#             input = input.view(-1, C, H, W)
+#         return self.conv2d(input, output_size=output_size)
 
 class RapidENet(nn.Module):
     def __init__(self, number_of_classes = 2, input_size=(1, 22, 20), dropout_rate = 0.5):

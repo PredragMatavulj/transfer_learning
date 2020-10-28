@@ -23,7 +23,7 @@ from utils import train_test_split, open_excel_file_in_pandas, gridsearch_hparam
 import torch.optim as optim
 from objectives import WeightedSELoss, PearsonCorrelationLoss
 from dataset import RapidEDataset
-from model import RapidENet
+from model import RapidENet, RapidENetCUDA
 
 args = {
 'experiment_name': 'Experiment',
@@ -85,7 +85,7 @@ class Experiment:
     def set_model(self, hp, model_path = None):
         
         if self.args['model'] == 'RapidENet':
-            self.model = RapidENet(dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes']).float()
+            self.model = RapidENetCUDA(dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes']).float()
             if model_path:
                 self.model.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage), strict=False)
             else:
@@ -251,11 +251,22 @@ class Experiment:
                 
                 train_batch_data, train_batch_target, train_batch_weights = train_batch
                 
-                train_batch_data = train_batch_data.to(self.device)
+                #train_batch_data = train_batch_data.to(self.device)
+                numpart_per_hour = list(map(lambda x: x[0].shape[0], train_batch_data))
+                #print(numpart_per_hour)
+                scatters = list(map(lambda x: x[0].to(self.device), train_batch_data))
+                spectrums = list(map(lambda x: x[1].to(self.device), train_batch_data))
+                lifetimes1 = list(map(lambda x: x[2].to(self.device), train_batch_data))
+                lifetimes2 = list(map(lambda x: x[3].to(self.device), train_batch_data))
+                sizes = list(map(lambda x: x[4].to(self.device), train_batch_data))
+                
+                
+                
+                
                 train_batch_target = train_batch_target.to(self.device)
                 train_batch_weights = train_batch_weights.to(self.device)
                 
-                train_batch_output = self.model(train_batch_data)
+                train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes, numpart_per_hour)
                 objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
                 
                 

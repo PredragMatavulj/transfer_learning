@@ -151,6 +151,7 @@ class RapidENet(nn.Module):
         #y = torch.zeros((len(scatters), self.number_of_classes))   # create a new variable which will contain outputs for each hour
         # x is a data for ONE HOUR
         scatters = [self.scatterConv1(x) for x in scatters] 
+        #print(scatters[0].shape)
         scatters = torch.split(self.batchNormScatter(torch.cat(scatters, dim=0)), numpart_per_hour, dim=0)
         scatters = [self.scatterConv2(x) for x in scatters]
         #print(scatters[0].shape)
@@ -202,7 +203,7 @@ class RapidENetCUDA(nn.Module):
         
         
         
-        super(RapidENet, self).__init__()
+        super(RapidENetCUDA, self).__init__()
         self.number_of_classes = number_of_classes
         self.dropout_rate = dropout_rate
 
@@ -307,10 +308,12 @@ class RapidENetCUDA(nn.Module):
         #y = torch.zeros((len(scatters), self.number_of_classes))   # create a new variable which will contain outputs for each hour
         # x is a data for ONE HOUR
         scatters = [self.scatterConv1(x) for x in scatters] 
+        print(sum(numpart_per_hour))
+        catted = self.batchNormScatter(torch.cat(scatters, dim=0))
+        print(catted.shape)
         scatters = torch.split(self.batchNormScatter(torch.cat(scatters, dim=0)), numpart_per_hour, dim=0)
         scatters = [self.scatterConv2(x) for x in scatters]
         #print(scatters[0].shape)
-        
         spectrums = [self.spectrumnConv1(x) for x in spectrums]
         spectrums = torch.split(self.batchNormSpectrum(torch.cat(spectrums, dim=0)), numpart_per_hour, dim=0)
         spectrums = [self.spectrumnConv2(x) for x in spectrums]

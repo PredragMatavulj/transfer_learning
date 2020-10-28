@@ -252,7 +252,7 @@ class Experiment:
                 train_batch_data, train_batch_target, train_batch_weights = train_batch
                 
                 #train_batch_data = train_batch_data.to(self.device)
-                numpart_per_hour = list(map(lambda x: x[0].shape[0], train_batch_data))
+                #numpart_per_hour = list(map(lambda x: x[0].shape[0], train_batch_data))
                 #print(numpart_per_hour)
                 scatters = list(map(lambda x: x[0].to(self.device), train_batch_data))
                 spectrums = list(map(lambda x: x[1].to(self.device), train_batch_data))
@@ -266,7 +266,7 @@ class Experiment:
                 train_batch_target = train_batch_target.to(self.device)
                 train_batch_weights = train_batch_weights.to(self.device)
                 
-                train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes, numpart_per_hour)
+                train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes)
                 objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
                 
                 

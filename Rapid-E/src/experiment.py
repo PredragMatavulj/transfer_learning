@@ -66,10 +66,7 @@ class Experiment:
         else:
             raise RuntimeError('Only gridsearch is implemented.')
         
-        self.criteria = {'objective_criteria': self.set_metric_by_name(self.args['objective_criteria']),
-                         'additional_criteria': [self.set_metric_by_name(name) for name in self.args['additional_criteria']],
-                         'selection_criteria': self.set_metric_by_name(self.args['selection_criteria'])
-                         }
+        self.criteria = None
         self.optimizer = None
         self.scheduler = None
         self.model = None
@@ -232,6 +229,9 @@ class Experiment:
         
         
         self.set_model(hp)
+        self.criteria = {'objective_criteria': self.set_metric_by_name(self.args['objective_criteria']),
+                         'additional_criteria': [self.set_metric_by_name(name) for name in self.args['additional_criteria']],
+                         'selection_criteria': self.set_metric_by_name(self.args['selection_criteria'])}
         self.set_optimizer(hp)
         
         if self.logging:

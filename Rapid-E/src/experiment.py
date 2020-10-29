@@ -120,13 +120,12 @@ class Experiment:
         if name ==  'WeightedSELoss':
             criteria = WeightedSELoss(selection=(True if name == self.args['selection_criteria'] else False))
             if self.args['GPU']:
-               criteria = nn.DataParallel(self.model)
-               criteria = criteria.cuda()
+               criteria = criteria.to(self.device)
         if name ==  'PearsonCorrelationLoss':
             criteria = PearsonCorrelationLoss(selection=(True if name == self.args['selection_criteria'] else False))
             if self.args['GPU']:
-               criteria = nn.DataParallel(self.model)
-               criteria = criteria.cuda()
+               criteria = criteria.to(self.device)
+
        
         
         return criteria

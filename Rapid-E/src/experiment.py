@@ -13,6 +13,7 @@ import torch
 import logging
 import datetime
 import pandas as pd
+from torch import nn
 #from torch import nn
 #import matplotlib.pyplot as plt
 #import functools as fnc
@@ -22,7 +23,7 @@ from utils import train_test_split, open_excel_file_in_pandas, gridsearch_hparam
 import torch.optim as optim
 from objectives import WeightedSELoss, PearsonCorrelationLoss
 from dataset import RapidEDataset
-from model import RapidENet
+from model import RapidENet, RapidENetCUDA
 
 args = {
 'experiment_name': 'Experiment',
@@ -45,7 +46,9 @@ args = {
 'pretrained_model_state_path': './models/novi_sad/model_pollen_types_ver0/Ambrosia_vs_all.pth',
 'number_of_classes': 2,
 'logging_per_batch': True,
-'logging': True
+'logging': True,
+'load_entire_dataset' : True,
+'GPU': True
 }
 
 
@@ -74,17 +77,22 @@ class Experiment:
         self.train_dict = None;
         self.logging = self.args['logging']
         self.logging_per_batch = self.args['logging_per_batch']
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+ 
     
     
     
     def set_model(self, hp, model_path = None):
         
         if self.args['model'] == 'RapidENet':
-            self.model = RapidENet(dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes']).float()
+            self.model = RapidENetCUDA(dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes']).float()
             if model_path:
                 self.model.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage), strict=False)
             else:
                 self.model.load_state_dict(torch.load(self.args['pretrained_model_state_path'], map_location=lambda storage, loc: storage), strict=False)
+            if self.args['GPU']:
+                self.model = nn.DataParallel(self.model)
+                self.model = self.model.to(self.device)
         else:
             raise RuntimeError('Only RapidENet is implemented.')
         
@@ -128,7 +136,7 @@ class Experiment:
                                                              }
     
     def prepare_data_loader(self, dframe, batch_size, dataset_name):
-        dataset = RapidEDataset(dframe, self.args['data_dir_path'], self.df_pollen_types, name = dataset_name)
+        dataset = RapidEDataset(dframe, self.args['data_dir_path'], self.df_pollen_types, load=self.args['load_entire_dataset'], name = dataset_name)
         stratified_train_sampler = StratifiedSampler(torch.from_numpy(np.array(list(dframe['CLUSTER']))), batch_size)
         return DataLoader(dataset, batch_size=batch_size, sampler = stratified_train_sampler, collate_fn=my_collate)
 
@@ -146,14 +154,9 @@ class Experiment:
 
             
     def update_batch_info(self, dataset_type, output, target, weights, batch_idx, epoch_idx, num_of_batches):
-        
-        batch_loss = self.criteria['objective_criteria'](output, target, weights)
-        self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_sum'][epoch_idx] += batch_loss
-        if (batch_idx == num_of_batches - 1):
-               self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][self.args['objective_criteria']]['epochs_sum'][epoch_idx] / num_of_batches      
-        for crt in self.criteria['additional_criteria']:
+        for crt in [self.criteria['objective_criteria'](output, target, weights)] + self.criteria['additional_criteria']:
             batch_loss = crt(output,target,weights)
-            self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] += batch_loss
+            self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] += batch_loss.item()
             if (batch_idx == num_of_batches - 1):
                 self.train_dict[dataset_type][crt.name]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] / num_of_batches
 
@@ -247,20 +250,37 @@ class Experiment:
                 #print(train_batch[0][0][1].shape)
                 
                 train_batch_data, train_batch_target, train_batch_weights = train_batch
-                #print(train_batch_target)
-                #print(train_batch_weights)
+                
+                #train_batch_data = train_batch_data.to(self.device)
+                #numpart_per_hour = list(map(lambda x: x[0].shape[0], train_batch_data))
+                #print(numpart_per_hour)
+                scatters = list(map(lambda x: x[0].to(self.device), train_batch_data))
+                spectrums = list(map(lambda x: x[1].to(self.device), train_batch_data))
+                lifetimes1 = list(map(lambda x: x[2].to(self.device), train_batch_data))
+                lifetimes2 = list(map(lambda x: x[3].to(self.device), train_batch_data))
+                sizes = list(map(lambda x: x[4].to(self.device), train_batch_data))
+                
+                
+                
+                
+                train_batch_target = train_batch_target.to(self.device)
+                train_batch_weights = train_batch_weights.to(self.device)
+                
+                train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes)
+                objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
                 
                 
                 self.optimizer.zero_grad()
-                train_batch_output = self.model(train_batch_data)
-                #print(train_batch_output)
-                objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
+                
+                
                 objective_batch_loss.backward()
                 
-                self.update_batch_info('train', train_batch_output, train_batch_target, train_batch_weights, i, epoch, len(train_loader))
                 
                 self.optimizer.step(lambda: objective_batch_loss)
                 self.scheduler.step(objective_batch_loss)
+                
+                self.update_batch_info('train', train_batch_output, train_batch_target, train_batch_weights, i, epoch, len(train_loader))
+
 
             # iterating on valid batches
             self.model.eval()

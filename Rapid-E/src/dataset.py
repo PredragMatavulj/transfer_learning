@@ -19,7 +19,7 @@ import pandas as pd
 class RapidEDataset(Dataset):
     """RapidE dataset."""
 
-    def __init__(self, df, dir_path, df_pollen_info, name = 'dataset'):
+    def __init__(self, df, dir_path, df_pollen_info, load = False, name = 'dataset'):
         """
         Args:
             pollen_type - one of 26 possible pollen types
@@ -34,6 +34,11 @@ class RapidEDataset(Dataset):
         self.df_pollen_info = df_pollen_info
         self.pollen_types = list(df.columns[4:])
         self.num_of_classes = len(self.pollen_types)
+        self.dataset = []
+        
+        self.load = load
+        if self.load:
+            self.load_to_torch_tensor()
         #print(self.df_pollen_info)
         #print(self.pollen_types)
         self.monts_of_types = df_pollen_info[['START', 'END']][df_pollen_info['CODE'].isin(self.pollen_types)]
@@ -48,6 +53,25 @@ class RapidEDataset(Dataset):
         
         
         #self.transform = transform
+    def load_to_torch_tensor(self):
+        fnames = list(self.df['FILENAME'])
+        for fn in fnames:
+             with open(os.path.join(self.dir_path, fn),'rb') as file:
+                X = pickle.load(file)
+                X[0] = torch.Tensor(X[0]).unsqueeze_(0).permute(1, 0, 2, 3)
+                X[1] = torch.Tensor(X[1]).unsqueeze_(0).permute(1, 0, 2, 3)
+                X[2] = torch.Tensor(X[2]).unsqueeze_(0).permute(1, 0, 2, 3)
+                X[3] = torch.Tensor(X[3])
+                X[4] = torch.Tensor(X[4]).unsqueeze_(0).permute(1, 0)
+                self.dataset.append(X)
+        
+            #y = torch.tensor(np.array(list(self.df.iloc[idx,4:(4+self.num_of_classes)])),dtype=torch.float32)
+            #w = torch.tensor(np.array(list(self.df.iloc[idx,(4+self.num_of_classes):])),dtype=torch.float32)
+            
+        
+        
+        
+        
 
     def __len__(self):
         return len(self.df)
@@ -55,16 +79,23 @@ class RapidEDataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-
-        with open(os.path.join(self.dir_path, self.df.loc[idx,'FILENAME']), 'rb') as file:
-            X = pickle.load(file)
-            X[0] = torch.Tensor(X[0]).unsqueeze_(0).permute(1, 0, 2, 3)
-            X[1] = torch.Tensor(X[1]).unsqueeze_(0).permute(1, 0, 2, 3)
-            X[2] = torch.Tensor(X[2]).unsqueeze_(0).permute(1, 0, 2, 3)
-            X[3] = torch.Tensor(X[3])
-            X[4] = torch.Tensor(X[4]).unsqueeze_(0).permute(1, 0)
+    
+        
+        if self.load:
+            X = self.dataset[idx]
             y = torch.tensor(np.array(list(self.df.iloc[idx,4:(4+self.num_of_classes)])),dtype=torch.float32)
             w = torch.tensor(np.array(list(self.df.iloc[idx,(4+self.num_of_classes):])),dtype=torch.float32)
+            
+        else:
+            with open(os.path.join(self.dir_path, self.df.loc[idx,'FILENAME']), 'rb') as file:
+                X = pickle.load(file)
+                X[0] = torch.Tensor(X[0]).unsqueeze_(0).permute(1, 0, 2, 3)
+                X[1] = torch.Tensor(X[1]).unsqueeze_(0).permute(1, 0, 2, 3)
+                X[2] = torch.Tensor(X[2]).unsqueeze_(0).permute(1, 0, 2, 3)
+                X[3] = torch.Tensor(X[3])
+                X[4] = torch.Tensor(X[4]).unsqueeze_(0).permute(1, 0)
+                y = torch.tensor(np.array(list(self.df.iloc[idx,4:(4+self.num_of_classes)])),dtype=torch.float32)
+                w = torch.tensor(np.array(list(self.df.iloc[idx,(4+self.num_of_classes):])),dtype=torch.float32)
             #print(y)
             #print(y)
             #w = np.array(list(self.df.iloc[idx,(4+len(self.pollen_types)):]))

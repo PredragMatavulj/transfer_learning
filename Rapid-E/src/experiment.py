@@ -24,6 +24,7 @@ import torch.optim as optim
 from objectives import WeightedSELoss, PearsonCorrelationLoss
 from dataset import RapidEDataset
 from model import RapidENet, RapidENetCUDA
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 args = {
 'experiment_name': 'Experiment',
@@ -57,6 +58,7 @@ args = {
 class Experiment:
     def __init__ (self, args):
         self.args = args
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.df = open_excel_file_in_pandas(args['metadata_path'])
         self.df_pollen_types = open_excel_file_in_pandas(args['pollen_info_path'])
         if args['hparam_search_strategy'] == 'gridsearch':
@@ -77,7 +79,7 @@ class Experiment:
         self.train_dict = None;
         self.logging = self.args['logging']
         self.logging_per_batch = self.args['logging_per_batch']
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        
  
     
     
@@ -120,8 +122,16 @@ class Experiment:
     def set_metric_by_name(self, name):
         if name ==  'WeightedSELoss':
             criteria = WeightedSELoss(selection=(True if name == self.args['selection_criteria'] else False))
+             if self.args['GPU']:
+                criteria = nn.DataParallel(self.model)
+                criteria = criteria.cuda()
         if name ==  'PearsonCorrelationLoss':
             criteria = PearsonCorrelationLoss(selection=(True if name == self.args['selection_criteria'] else False))
+            if self.args['GPU']:
+                criteria = nn.DataParallel(self.model)
+                criteria = criteria.cuda()
+       
+        
         return criteria
     
     def set_train_dict(self, num_of_epochs):

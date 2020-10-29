@@ -20,15 +20,12 @@ class  WeightedSELoss():
 
     
     def __call__(self,output, target, weights):
-<<<<<<< HEAD
         #print(weights.type())
         #print(target.type())
         #print(output.type())
-=======
         print(weights.shape)
         print(target.shape)
         print(output.shape)
->>>>>>> b39381b97d835768ddc32a4d0a2eb8f67fc8b0bb
         # print(((output - target)**2).type())
         return torch.dot(weights,(output - target)**2)
 

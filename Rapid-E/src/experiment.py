@@ -122,14 +122,14 @@ class Experiment:
     def set_metric_by_name(self, name):
         if name ==  'WeightedSELoss':
             criteria = WeightedSELoss(selection=(True if name == self.args['selection_criteria'] else False))
-             if self.args['GPU']:
-                criteria = nn.DataParallel(self.model)
-                criteria = criteria.cuda()
+            if self.args['GPU']:
+               criteria = nn.DataParallel(self.model)
+               criteria = criteria.cuda()
         if name ==  'PearsonCorrelationLoss':
             criteria = PearsonCorrelationLoss(selection=(True if name == self.args['selection_criteria'] else False))
             if self.args['GPU']:
-                criteria = nn.DataParallel(self.model)
-                criteria = criteria.cuda()
+               criteria = nn.DataParallel(self.model)
+               criteria = criteria.cuda()
        
         
         return criteria

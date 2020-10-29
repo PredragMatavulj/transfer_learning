@@ -278,7 +278,7 @@ class Experiment:
             for ds in ['train', 'valid']:
                 print("\t\t" + ds + ":")
                 for cn in [self.args['objective_criteria']] + self.args['additional_criteria']:
-                    print('\t\t\t' + cn + ': ' + str(self.train_dict[ds][cn]['epochs_mean']))
+                    print('\t\t\t' + cn + ': ' + str(self.train_dict[ds][cn]['epochs_mean'][epoch]))
             
             
             

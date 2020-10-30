@@ -27,5 +27,5 @@ for fn in fns:
         X[4] = torch.Tensor(X[4]).unsqueeze_(0).permute(1, 0)
         dics[fn] = X
 
-
-pickle.save('../data/novi_sad_2019.pkl')
+with open('../data/novi_sad_2019.pkl', 'wb') as handle:
+    pickle.dump(dics, handle, protocol=pickle.HIGHEST_PROTOCOL)

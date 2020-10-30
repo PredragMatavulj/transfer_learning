@@ -19,7 +19,7 @@ import pandas as pd
 class RapidEDataset(Dataset):
     """RapidE dataset."""
 
-    def __init__(self, df, dir_path, df_pollen_info, load = False, name = 'dataset'):
+    def __init__(self, df, dir_path, df_pollen_info, load = False, name = 'dataset', preloaded_dict = None):
         """
         Args:
             pollen_type - one of 26 possible pollen types
@@ -34,13 +34,12 @@ class RapidEDataset(Dataset):
         self.df_pollen_info = df_pollen_info
         self.pollen_types = list(df.columns[4:])
         self.num_of_classes = len(self.pollen_types)
-        self.dataset = []
-        
+        self.preloaded_dict = preloaded_dict     
         self.load = load
-        if self.load:
-            self.load_to_torch_tensor()
-        #print(self.df_pollen_info)
-        #print(self.pollen_types)
+       
+        
+       
+        
         self.monts_of_types = df_pollen_info[['START', 'END']][df_pollen_info['CODE'].isin(self.pollen_types)]
         
         self.monts_of_types = self.monts_of_types.set_index(pd.Index(list(range(len(self.monts_of_types)))))
@@ -82,7 +81,7 @@ class RapidEDataset(Dataset):
     
         
         if self.load:
-            X = self.dataset[idx]
+            X = self.preloaded_dict[self.df.loc[idx,'FILENAME']]
             y = torch.tensor(np.array(list(self.df.iloc[idx,4:(4+self.num_of_classes)])),dtype=torch.float32)
             w = torch.tensor(np.array(list(self.df.iloc[idx,(4+self.num_of_classes):])),dtype=torch.float32)
             

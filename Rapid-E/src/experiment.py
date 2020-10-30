@@ -7,6 +7,7 @@ Created on Fri Oct 23 00:46:06 2020
 
 import os
 import copy
+import pickle
 #import pandas as pd
 import numpy as np
 import torch
@@ -49,6 +50,7 @@ args = {
 'logging_per_batch': True,
 'logging': True,
 'load_entire_dataset' : True,
+'entire_set_pickle': '../data/novi_sad_2019.pkl',
 'GPU': True
 }
 
@@ -66,6 +68,9 @@ class Experiment:
         else:
             raise RuntimeError('Only gridsearch is implemented.')
         
+        if self.args['load_entire_dataset']:
+            with open(self.args['entire_set_pickle'], 'rb') as file:
+                self.preloaded_dict = pickle.load(file)
         self.criteria = None
         self.optimizer = None
         self.scheduler = None
@@ -142,7 +147,7 @@ class Experiment:
                                                              }
     
     def prepare_data_loader(self, dframe, batch_size, dataset_name):
-        dataset = RapidEDataset(dframe, self.args['data_dir_path'], self.df_pollen_types, load=self.args['load_entire_dataset'], name = dataset_name)
+        dataset = RapidEDataset(dframe, self.args['data_dir_path'], self.df_pollen_types, load=self.args['load_entire_dataset'], name = dataset_name, preloaded_dict=self.preloaded_dict)
         stratified_train_sampler = StratifiedSampler(torch.from_numpy(np.array(list(dframe['CLUSTER']))), batch_size)
         return DataLoader(dataset, batch_size=batch_size, sampler = stratified_train_sampler, collate_fn=my_collate)
 

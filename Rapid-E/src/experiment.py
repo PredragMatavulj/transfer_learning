@@ -285,10 +285,12 @@ class Experiment:
                 #print('Data:')
                 #print(train_batch_target)
                 #print(train_batch_weights)
-                train_batch_target = train_batch_target.to(self.device)
-                train_batch_weights = train_batch_weights.to(self.device)
+                
                 
                 train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes)
+                
+                train_batch_target = train_batch_target.to(self.device)
+                train_batch_weights = train_batch_weights.to(self.device)
                 objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
                 
                 

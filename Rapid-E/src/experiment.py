@@ -282,9 +282,9 @@ class Experiment:
                 sizes = list(map(lambda x: x[4].to(self.device), train_batch_data))
                 
                 
-                print('Data:')
-                print(train_batch_target)
-                print(train_batch_weights)
+                #print('Data:')
+                #print(train_batch_target)
+                #print(train_batch_weights)
                 train_batch_target = train_batch_target.to(self.device)
                 train_batch_weights = train_batch_weights.to(self.device)
                 

@@ -42,13 +42,13 @@ class WeightedSELoss(torch.nn.Module):
         self.selection = selection
         
     def forward(self, output, target, weights):
-        print('Calc:')
-        print('output:')
-        print(output)
-        print('target:')
-        print(target)
-        print('weights:')
-        print(weights)
+        # print('Calc:')
+        # print('output:')
+        # print(output)
+        # print('target:')
+        # print(target)
+        # print('weights:')
+        # print(weights)
         return torch.dot(weights,(output - target)**2)
 
 

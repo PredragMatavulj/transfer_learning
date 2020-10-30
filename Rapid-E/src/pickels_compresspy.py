@@ -28,4 +28,5 @@ for fn in fns:
         dics[fn] = X
 
 
-pickle.save('../data/novi_sad_2019.pkl')
+with open('../data/novi_sad_2019.pkl', 'wb') as handle:
+    pickle.dump(dics, handle, protocol=pickle.HIGHEST_PROTOCOL)

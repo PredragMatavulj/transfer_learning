@@ -91,7 +91,7 @@ class Experiment:
     def set_model(self, hp, obj_criteria, model_path = None):
         
         if self.args['model'] == 'RapidENet':
-            self.model = RapidENetCUDA(obj_criteria = obj_criteria, dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes']).float()
+            self.model = RapidENetCUDA(obj_loss=obj_criteria, dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes']).float()
             if model_path:
                 self.model.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage), strict=False)
             else:

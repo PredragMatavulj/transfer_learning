@@ -241,7 +241,7 @@ class Experiment:
     def train(self, train_loader, hp, save_model = False, valid_loader = None):
         
         
-        self.set_model(hp)
+        self.set_model(hp, obj_criteria= self.criteria['objective_criteria'])
         
         self.set_optimizer(hp)
         

@@ -306,7 +306,7 @@ class Experiment:
                 #self.update_batch_info('train', train_batch_output, train_batch_target, train_batch_weights, i, epoch, len(train_loader))
                 #print("Batch " + str(i+1) +"completed")
 
-
+            break
             # iterating on valid batches
             self.model.eval()
             if valid_loader:

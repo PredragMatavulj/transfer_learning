@@ -41,9 +41,9 @@ args = {
 'hparam_search_strategy': 'gridsearch',
 'num_of_valid_splits': 2,
 'num_of_test_splits': 2,
-'train_batch_size': 500,
-'valid_batch_size': 200,
-'test_batch_size': 200,
+'train_batch_size': 10,
+'valid_batch_size': 5,
+'test_batch_size': 5,
 'model': 'RapidENet',
 'pretrained_model_state_path': './models/novi_sad/model_pollen_types_ver0/Ambrosia_vs_all.pth',
 'number_of_classes': 2,
@@ -125,11 +125,13 @@ class Experiment:
         if name ==  'WeightedSELoss':
             criteria = WeightedSELoss(selection=(True if name == self.args['selection_criteria'] else False))
             if self.args['GPU']:
-               criteria = criteria.to(self.device)
+                criteria = nn.DataParallel(criteria)
+                criteria = criteria.to(self.device)
         if name ==  'PearsonCorrelationLoss':
             criteria = PearsonCorrelationLoss(selection=(True if name == self.args['selection_criteria'] else False))
             if self.args['GPU']:
-               criteria = criteria.to(self.device)
+                criteria = nn.DataParallel(criteria)
+                criteria = criteria.to(self.device)
 
        
         
@@ -139,11 +141,14 @@ class Experiment:
         self.train_dict = {'train': {},
                             'valid': {}}
         
+        
         for dset in ['train', 'valid']:
             for criteria in [self.criteria['objective_criteria']] + self.criteria['additional_criteria']:
-                self.train_dict[dset][criteria.name] = {'epochs_sum': torch.zeros(num_of_epochs), 
+                name = (criteria.module.name if self.args['GPU'] else criteria.name)
+                sense = (criteria.module.sense if self.args['GPU'] else criteria.sense)
+                self.train_dict[dset][name] = {'epochs_sum': torch.zeros(num_of_epochs), 
                                                             'epochs_mean': torch.zeros(num_of_epochs),
-                                                            'best_value': float('inf') if criteria.sense == 'min' else float('-inf'),
+                                                            'best_value': float('inf') if  sense == 'min' else float('-inf'),
                                                              }
     
     def prepare_data_loader(self, dframe, batch_size, dataset_name):
@@ -155,7 +160,8 @@ class Experiment:
     def tune_hparam(self, inner):
         means = torch.mean(inner,1)
         #stdevs = torch.std(inner,1)
-        if (self.criteria['selection_criteria'].sense == 'max'):
+        sense = (self.criteria['selection_criteria'].module.sense if self.args['GPU'] else self.criteria['selection_criteria'].sense)
+        if ( sense == 'max'):
             jopt = torch.argmax(means).item()
         else:
             jopt = torch.argmin(means).item()
@@ -165,11 +171,12 @@ class Experiment:
 
             
     def update_batch_info(self, dataset_type, output, target, weights, batch_idx, epoch_idx, num_of_batches):
-        for crt in [self.criteria['objective_criteria'](output, target, weights)] + self.criteria['additional_criteria']:
+        for crt in [self.criteria['objective_criteria']] + self.criteria['additional_criteria']:
+            name = (crt.module.name if self.args['GPU'] else crt.name)
             batch_loss = crt(output,target,weights)
-            self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] += batch_loss.item()
+            self.train_dict[dataset_type][name]['epochs_sum'][epoch_idx] += batch_loss.item()
             if (batch_idx == num_of_batches - 1):
-                self.train_dict[dataset_type][crt.name]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][crt.name]['epochs_sum'][epoch_idx] / num_of_batches
+                self.train_dict[dataset_type][name]['epochs_mean'][epoch_idx] = self.train_dict[dataset_type][name]['epochs_sum'][epoch_idx] / num_of_batches
 
     def nested_crossvalidation(self):
         if self.logging:
@@ -294,6 +301,7 @@ class Experiment:
                 self.scheduler.step(objective_batch_loss)
                 
                 self.update_batch_info('train', train_batch_output, train_batch_target, train_batch_weights, i, epoch, len(train_loader))
+                print("Batch " + str(i+1) +"completed")
 
 
             # iterating on valid batches
@@ -341,26 +349,28 @@ class Experiment:
     
     def update_best_model_for_each_criteria(self, traindataset_name, valid_dataset_name, hp, epoch_idx, save_model):
         for criteria in [self.criteria['objective_criteria']] + self.criteria['additional_criteria']:
-            if criteria.sense == 'min':
-                if  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx] <  self.train_dict['train'][criteria.name]['best_value']:
-                    self.train_dict['train'][criteria.name]['best_value'] =  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx]
+            red = (criteria.module.reduction if self.args['GPU'] else red)
+            name = (criteria.module.name if self.args['GPU'] else criteria.name)
+            if (criteria.module.sense if self.args['GPU'] else criteria.sense) == 'min':
+                if  self.train_dict['train'][name]['epochs_'+red][epoch_idx] <  self.train_dict['train'][name]['best_value']:
+                    self.train_dict['train'][name]['best_value'] =  self.train_dict['train'][name]['epochs_'+red][epoch_idx]
                     if save_model:
                             self.save_model_state(hp, epoch_idx, traindataset_name, 'train')
                 if valid_dataset_name:
-                    if  self.train_dict['valid'][criteria.name]['epochs_'+criteria.reduction][epoch_idx] <  self.train_dict['valid'][criteria.name]['best_value']:
-                        self.train_dict['valid'][criteria.name]['best_value'] =  self.train_dict['valid'][criteria.name]['epochs_'+criteria.reduction][epoch_idx]
+                    if  self.train_dict['valid'][name]['epochs_'+red][epoch_idx] <  self.train_dict['valid'][name]['best_value']:
+                        self.train_dict['valid'][name]['best_value'] =  self.train_dict['valid'][name]['epochs_'+red][epoch_idx]
                         if save_model:
                                 self.save_model_state(hp, epoch_idx, valid_dataset_name, 'valid')      
             else:
-                if  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx] >  self.train_dict['train'][criteria.name]['best_value']:
-                    self.train_dict['train'][criteria.name]['best_value'] =  self.train_dict['train'][criteria.name]['epochs_'+criteria.reduction][epoch_idx]
+                if  self.train_dict['train'][name]['epochs_'+red][epoch_idx] >  self.train_dict['train'][name]['best_value']:
+                    self.train_dict['train'][name]['best_value'] =  self.train_dict['train'][name]['epochs_'+red][epoch_idx]
                     if save_model:
                             self.save_model_state(hp, epoch_idx, traindataset_name, 'train')
                 
                 if valid_dataset_name:
                 
-                    if  self.train_dict['valid'][criteria.name]['epochs_'+criteria.reduction][epoch_idx] >  self.train_dict['valid'][criteria.name]['best_value']:
-                        self.train_dict['valid'][criteria.name]['best_value'] =  self.train_dict['valid'][criteria.name]['epochs_'+criteria.reduction][epoch_idx]
+                    if  self.train_dict['valid'][name]['epochs_'+red][epoch_idx] >  self.train_dict['valid'][name]['best_value']:
+                        self.train_dict['valid'][name]['best_value'] =  self.train_dict['valid'][name]['epochs_'+red][epoch_idx]
                         if save_model:
                                 self.save_model_state(hp, epoch_idx, valid_dataset_name, 'valid')
                             

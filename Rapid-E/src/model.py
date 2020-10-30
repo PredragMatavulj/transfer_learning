@@ -308,9 +308,9 @@ class RapidENetCUDA(nn.Module):
         #y = torch.zeros((len(scatters), self.number_of_classes))   # create a new variable which will contain outputs for each hour
         # x is a data for ONE HOUR
         scatters = [self.scatterConv1(x) for x in scatters] 
-        print(sum(numpart_per_hour))
-        catted = self.batchNormScatter(torch.cat(scatters, dim=0))
-        print(catted.shape)
+        #print(sum(numpart_per_hour))
+        #catted = self.batchNormScatter(torch.cat(scatters, dim=0))
+        #print(catted.shape)
         scatters = torch.split(self.batchNormScatter(torch.cat(scatters, dim=0)), numpart_per_hour, dim=0)
         scatters = [self.scatterConv2(x) for x in scatters]
         #print(scatters[0].shape)
@@ -350,4 +350,5 @@ class RapidENetCUDA(nn.Module):
         
         outputs = torch.stack([torch.sum(x,dim=0) for x in ouputs], dim=0)
         outputs = (outputs - torch.mean(outputs, dim=0)) / torch.std(outputs, dim = 0)
+        print(outputs[:,-1])
         return outputs[:,-1]

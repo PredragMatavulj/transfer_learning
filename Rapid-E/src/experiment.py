@@ -146,8 +146,11 @@ class Experiment:
         
         for dset in ['train', 'valid']:
             for criteria in [self.criteria['objective_criteria']] + self.criteria['additional_criteria']:
-                name = (criteria.module.name if self.args['GPU'] else criteria.name)
-                sense = (criteria.module.sense if self.args['GPU'] else criteria.sense)
+                # name = (criteria.module.name if self.args['GPU'] else criteria.name)
+                # sense = (criteria.module.sense if self.args['GPU'] else criteria.sense)
+                
+                name = criteria.name
+                sense = criteria.sense
                 self.train_dict[dset][name] = {'epochs_sum': torch.zeros(num_of_epochs), 
                                                             'epochs_mean': torch.zeros(num_of_epochs),
                                                             'best_value': float('inf') if  sense == 'min' else float('-inf'),
@@ -162,7 +165,9 @@ class Experiment:
     def tune_hparam(self, inner):
         means = torch.mean(inner,1)
         #stdevs = torch.std(inner,1)
-        sense = (self.criteria['selection_criteria'].module.sense if self.args['GPU'] else self.criteria['selection_criteria'].sense)
+        #sense = (self.criteria['selection_criteria'].module.sense if self.args['GPU'] else self.criteria['selection_criteria'].sense)
+        sense = self.criteria['selection_criteria'].sense
+
         if ( sense == 'max'):
             jopt = torch.argmax(means).item()
         else:
@@ -174,7 +179,9 @@ class Experiment:
             
     def update_batch_info(self, dataset_type, output, target, weights, batch_idx, epoch_idx, num_of_batches):
         for crt in [self.criteria['objective_criteria']] + self.criteria['additional_criteria']:
-            name = (crt.module.name if self.args['GPU'] else crt.name)
+            #name = (crt.module.name if self.args['GPU'] else crt.name)
+            #batch_loss = crt(output,target,weights)
+            name = crt.name
             batch_loss = crt(output,target,weights)
             self.train_dict[dataset_type][name]['epochs_sum'][epoch_idx] += batch_loss.item()
             if (batch_idx == num_of_batches - 1):
@@ -352,8 +359,10 @@ class Experiment:
     
     def update_best_model_for_each_criteria(self, traindataset_name, valid_dataset_name, hp, epoch_idx, save_model):
         for criteria in [self.criteria['objective_criteria']] + self.criteria['additional_criteria']:
-            red = (criteria.module.reduction if self.args['GPU'] else criteria.reduction)
-            name = (criteria.module.name if self.args['GPU'] else criteria.name)
+            # red = (criteria.module.reduction if self.args['GPU'] else criteria.reduction)
+            # name = (criteria.module.name if self.args['GPU'] else criteria.name)
+            red = criteria.reduction
+            name = criteria.name
             if (criteria.module.sense if self.args['GPU'] else criteria.sense) == 'min':
                 if  self.train_dict['train'][name]['epochs_'+red][epoch_idx] <  self.train_dict['train'][name]['best_value']:
                     self.train_dict['train'][name]['best_value'] =  self.train_dict['train'][name]['epochs_'+red][epoch_idx]

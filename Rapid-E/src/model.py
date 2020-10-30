@@ -199,13 +199,14 @@ class RapidENet(nn.Module):
 
 
 class RapidENetCUDA(nn.Module):
-    def __init__(self, number_of_classes = 2, input_size=(1, 22, 20), dropout_rate = 0.5):
+    def __init__(self, obj_loss, number_of_classes = 2, dropout_rate = 0.5, add_loss = None):
         
         
         
         super(RapidENetCUDA, self).__init__()
         self.number_of_classes = number_of_classes
         self.dropout_rate = dropout_rate
+        self.obj_loss = obj_loss
 
         #self.batchNormScatter2 = nn.BatchNorm2d(1)
         self.scatterConv1 = nn.Sequential(
@@ -296,10 +297,10 @@ class RapidENetCUDA(nn.Module):
         #        nn.Sequential(
         #    nn.Linear(1, 50), nn.ReLU(), nn.Linear(50, 1), nn.ReLU()))
         
-        
+    
  
 
-    def forward(self, scatters, spectrums, lifetimes1, lifetimes2, sizes):  # red: spec, scat, life1, life2, size
+    def forward(self, scatters, spectrums, lifetimes1, lifetimes2, sizes, y, weights):  # red: spec, scat, life1, life2, size
         
 
         
@@ -350,5 +351,9 @@ class RapidENetCUDA(nn.Module):
         
         outputs = torch.stack([torch.sum(x,dim=0) for x in ouputs], dim=0)
         outputs = (outputs - torch.mean(outputs, dim=0)) / torch.std(outputs, dim = 0)
-        print(outputs[:,-1])
-        return outputs[:,-1]
+        #print(outputs[:,-1])
+        
+        loss = self.obj_loss(outputs[:,-1], y, weights)
+        
+        
+        return loss

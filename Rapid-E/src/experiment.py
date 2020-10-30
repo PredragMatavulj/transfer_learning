@@ -71,7 +71,9 @@ class Experiment:
         if self.args['load_entire_dataset']:
             with open(self.args['entire_set_pickle'], 'rb') as file:
                 self.preloaded_dict = pickle.load(file)
-        self.criteria = None
+        self.criteria = {'objective_criteria': self.set_metric_by_name(self.args['objective_criteria']),
+                         'additional_criteria': [self.set_metric_by_name(name) for name in self.args['additional_criteria']],
+                         'selection_criteria': self.set_metric_by_name(self.args['selection_criteria'])}
         self.optimizer = None
         self.scheduler = None
         self.model = None
@@ -86,10 +88,10 @@ class Experiment:
     
     
     
-    def set_model(self, hp, model_path = None):
+    def set_model(self, hp, obj_criteria, model_path = None):
         
         if self.args['model'] == 'RapidENet':
-            self.model = RapidENetCUDA(dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes']).float()
+            self.model = RapidENetCUDA(obj_criteria = obj_criteria, dropout_rate = hp['drop_out'], number_of_classes = self.args['number_of_classes']).float()
             if model_path:
                 self.model.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage), strict=False)
             else:
@@ -124,14 +126,14 @@ class Experiment:
     def set_metric_by_name(self, name):
         if name ==  'WeightedSELoss':
             criteria = WeightedSELoss(selection=(True if name == self.args['selection_criteria'] else False))
-            if self.args['GPU']:
-                criteria = nn.DataParallel(criteria)
-                criteria = criteria.to(self.device)
+            # if self.args['GPU']:
+            #     criteria = nn.DataParallel(criteria)
+            #     criteria = criteria.to(self.device)
         if name ==  'PearsonCorrelationLoss':
             criteria = PearsonCorrelationLoss(selection=(True if name == self.args['selection_criteria'] else False))
-            if self.args['GPU']:
-                criteria = nn.DataParallel(criteria)
-                criteria = criteria.to(self.device)
+            # if self.args['GPU']:
+            #     criteria = nn.DataParallel(criteria)
+            #     criteria = criteria.to(self.device)
 
        
         
@@ -240,9 +242,7 @@ class Experiment:
         
         
         self.set_model(hp)
-        self.criteria = {'objective_criteria': self.set_metric_by_name(self.args['objective_criteria']),
-                         'additional_criteria': [self.set_metric_by_name(name) for name in self.args['additional_criteria']],
-                         'selection_criteria': self.set_metric_by_name(self.args['selection_criteria'])}
+        
         self.set_optimizer(hp)
         
         if self.logging:
@@ -280,18 +280,18 @@ class Experiment:
                 lifetimes1 = list(map(lambda x: x[2].to(self.device), train_batch_data))
                 lifetimes2 = list(map(lambda x: x[3].to(self.device), train_batch_data))
                 sizes = list(map(lambda x: x[4].to(self.device), train_batch_data))
-                
+                train_batch_target = train_batch_target.to(self.device)
+                train_batch_weights = train_batch_weights.to(self.device)
                 
                 #print('Data:')
                 #print(train_batch_target)
                 #print(train_batch_weights)
                 
                 
-                train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes)
+                objective_batch_loss = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes, train_batch_target, train_batch_weights)
+                print(objective_batch_loss)
                 
-                train_batch_target = train_batch_target.to(self.device)
-                train_batch_weights = train_batch_weights.to(self.device)
-                objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
+                #objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
                 
                 
                 self.optimizer.zero_grad()
@@ -303,8 +303,8 @@ class Experiment:
                 self.optimizer.step(lambda: objective_batch_loss)
                 self.scheduler.step(objective_batch_loss)
                 
-                self.update_batch_info('train', train_batch_output, train_batch_target, train_batch_weights, i, epoch, len(train_loader))
-                print("Batch " + str(i+1) +"completed")
+                #self.update_batch_info('train', train_batch_output, train_batch_target, train_batch_weights, i, epoch, len(train_loader))
+                #print("Batch " + str(i+1) +"completed")
 
 
             # iterating on valid batches
@@ -352,7 +352,7 @@ class Experiment:
     
     def update_best_model_for_each_criteria(self, traindataset_name, valid_dataset_name, hp, epoch_idx, save_model):
         for criteria in [self.criteria['objective_criteria']] + self.criteria['additional_criteria']:
-            red = (criteria.module.reduction if self.args['GPU'] else red)
+            red = (criteria.module.reduction if self.args['GPU'] else criteria.reduction)
             name = (criteria.module.name if self.args['GPU'] else criteria.name)
             if (criteria.module.sense if self.args['GPU'] else criteria.sense) == 'min':
                 if  self.train_dict['train'][name]['epochs_'+red][epoch_idx] <  self.train_dict['train'][name]['best_value']:

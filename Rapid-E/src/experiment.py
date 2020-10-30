@@ -277,18 +277,19 @@ class Experiment:
                 #print(i)
                 #print(train_batch[0][0][1].shape)
                 
-                train_batch_data, train_batch_target, train_batch_weights = train_batch
+                #train_batch_data, train_batch_target, train_batch_weights = train_batch
                 
                 #train_batch_data = train_batch_data.to(self.device)
                 #numpart_per_hour = list(map(lambda x: x[0].shape[0], train_batch_data))
                 #print(numpart_per_hour)
-                scatters = list(map(lambda x: x[0].to(self.device), train_batch_data))
-                spectrums = list(map(lambda x: x[1].to(self.device), train_batch_data))
-                lifetimes1 = list(map(lambda x: x[2].to(self.device), train_batch_data))
-                lifetimes2 = list(map(lambda x: x[3].to(self.device), train_batch_data))
-                sizes = list(map(lambda x: x[4].to(self.device), train_batch_data))
-                train_batch_target = train_batch_target.to(self.device)
-                train_batch_weights = train_batch_weights.to(self.device)
+                train_batch_target = train_batch[1].to(self.device)
+                train_batch_weights = train_batch[2].to(self.device)
+                scatters = list(map(lambda x: x[0].to(self.device), train_batch[0]))
+                spectrums = list(map(lambda x: x[1].to(self.device), train_batch[0]))
+                lifetimes1 = list(map(lambda x: x[2].to(self.device), train_batch[0]))
+                lifetimes2 = list(map(lambda x: x[3].to(self.device), train_batch[0]))
+                sizes = list(map(lambda x: x[4].to(self.device), train_batch[0]))
+                
                 
                 #print('Data:')
                 #print(train_batch_target)

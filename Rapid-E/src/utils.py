@@ -251,11 +251,11 @@ def gridsearch_hparam_from_json(filepath):
 
 
 def my_collate(batch):
-    data = [item[0] for item in batch]
-    target = torch.cat([item[1] for item in batch], dim=0)
-    target = (target - torch.mean(target, dim=0))/torch.std(target,dim=0)
-    weights = torch.cat([item[2] for item in batch], dim=0)
-    return [data, target, weights]
+    #data = [item[0] for item in batch]
+    #target = torch.cat([item[1] for item in batch], dim=0)
+    #target = (target - torch.mean(target, dim=0))/torch.std(target,dim=0)
+    #weights = torch.cat([item[2] for item in batch], dim=0)
+    return batch
             
             
     

@@ -302,7 +302,7 @@ class RapidENetCUDA(nn.Module):
 
     def forward(self, scatters, spectrums, lifetimes1, lifetimes2, sizes, y, weights):  # red: spec, scat, life1, life2, size
         
-
+        
         
 
         numpart_per_hour = list(map(lambda x: x.shape[0], scatters))

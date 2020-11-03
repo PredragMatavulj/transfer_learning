@@ -85,7 +85,7 @@ class RapidEDataset(Dataset):
             y = torch.tensor(np.array(list(self.df.iloc[idx,4:(4+self.num_of_classes)])),dtype=torch.float32)
             w = torch.tensor(np.array(list(self.df.iloc[idx,(4+self.num_of_classes):])),dtype=torch.float32)
             
-            data = [[X[i],y[i],w[i]] for i in range(len(X))]
+            #data = [[X[i],y[i],w[i]] for i in range(len(X))]
             
         else:
             with open(os.path.join(self.dir_path, self.df.loc[idx,'FILENAME']), 'rb') as file:
@@ -97,11 +97,11 @@ class RapidEDataset(Dataset):
                 X[4] = torch.Tensor(X[4]).unsqueeze_(0).permute(1, 0)
                 y = torch.tensor(np.array(list(self.df.iloc[idx,4:(4+self.num_of_classes)])),dtype=torch.float32)
                 w = torch.tensor(np.array(list(self.df.iloc[idx,(4+self.num_of_classes):])),dtype=torch.float32)
-                data = [[X[i],y[i],w[i]] for i in range(len(X))]
+                #data = [[X[i],y[i],w[i]] for i in range(len(X))]
             #print(y)
             #print(y)
             #w = np.array(list(self.df.iloc[idx,(4+len(self.pollen_types)):]))
             
             
             
-        return data
+        return [X,y,w]

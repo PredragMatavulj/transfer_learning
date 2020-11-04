@@ -301,7 +301,8 @@ class Experiment:
                 
                 
                 train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes)
-                #print(objective_batch_loss)
+                
+                print(train_batch_output)
                 train_batch_target = torch.tensor(list(map(lambda x: x[1], train_batch))).cuda(non_blocking=True)
                 train_batch_weights = torch.tensor(list(map(lambda x: x[2], train_batch))).cuda(non_blocking=True)
                 

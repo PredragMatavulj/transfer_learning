@@ -312,7 +312,7 @@ class RapidENetCUDA(nn.Module):
         
         
         print(len(scatters))
-        print(train_batch_target.shape)
+        print(train_batch_target)
         
 
         numpart_per_hour = list(map(lambda x: x.shape[0], scatters))

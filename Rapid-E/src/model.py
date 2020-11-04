@@ -307,8 +307,8 @@ class RapidENetCUDA(nn.Module):
         lifetimes1 = list(map(lambda x: x[0][2].to(device), train_batch))
         lifetimes2 = list(map(lambda x: x[0][3].to(device), train_batch))
         sizes = list(map(lambda x: x[0][4].to(device), train_batch))
-        train_batch_target = torch.tensor(list(map(lambda x: x[1], train_batch))).to(self.device)
-        train_batch_weights = torch.tensor(list(map(lambda x: x[2], train_batch))).to(self.device)
+        train_batch_target = torch.tensor(list(map(lambda x: x[1], train_batch))).to(device)
+        train_batch_weights = torch.tensor(list(map(lambda x: x[2], train_batch))).to(device)
         
         
         print(len(scatters))

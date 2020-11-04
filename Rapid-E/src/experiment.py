@@ -291,7 +291,7 @@ class Experiment:
                 lifetimes1 = list(map(lambda x: x[0][2].cuda(non_blocking=True), train_batch))
                 lifetimes2 = list(map(lambda x: x[0][3].cuda(non_blocking=True), train_batch))
                 sizes = list(map(lambda x: x[0][4].to(self.device).cuda(non_blocking=True), train_batch))
-                #train_batch_target = torch.tensor(list(map(lambda x: x[1], train_batch))).to(device)
+                train_batch_target2 = torch.tensor(list(map(lambda x: x[1], train_batch))).cuda(non_blocking=True)
                 #train_batch_weights = torch.tensor(list(map(lambda x: x[2], train_batch))).to(device)
                 
                 
@@ -300,7 +300,7 @@ class Experiment:
                 #print(train_batch_weights)
                 
                 
-                train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes)
+                train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes, train_batch_target2)
                 
                 print(train_batch_output)
                 train_batch_target = torch.tensor(list(map(lambda x: x[1], train_batch))).cuda(0,non_blocking=True)

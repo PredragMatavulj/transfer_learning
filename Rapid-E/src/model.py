@@ -300,7 +300,7 @@ class RapidENetCUDA(nn.Module):
     
  
 
-    def forward(self, scatters, spectrums, lifetimes1, lifetimes2, sizes):  # red: spec, scat, life1, life2, size
+    def forward(self, scatters, spectrums, lifetimes1, lifetimes2, sizes, target):  # red: spec, scat, life1, life2, size
         
         
         
@@ -308,7 +308,7 @@ class RapidENetCUDA(nn.Module):
         #print(len(scatters))
         #print(train_batch_target)
         
-
+        print(target)
         numpart_per_hour = list(map(lambda x: x.shape[0], scatters))
         #y = torch.zeros((len(scatters), self.number_of_classes))   # create a new variable which will contain outputs for each hour
         # x is a data for ONE HOUR

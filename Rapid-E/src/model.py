@@ -302,7 +302,7 @@ class RapidENetCUDA(nn.Module):
 
     def forward(self, scatters, spectrums, lifetimes1, lifetimes2, sizes, y, weights):  # red: spec, scat, life1, life2, size
         
-        print(scatters[0].shape)
+        print(len(scatters))
         print(y.shape)
         
 

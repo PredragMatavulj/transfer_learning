@@ -98,7 +98,9 @@ class Experiment:
                 self.model.load_state_dict(torch.load(self.args['pretrained_model_state_path'], map_location=lambda storage, loc: storage), strict=False)
             if self.args['GPU']:
                 self.model = nn.DataParallel(self.model)
-                self.model = self.model.to(self.device)
+                torch.cuda.set_device(0)
+                self.model.cuda(0)
+                #self.model = self.model.to(self.device)
         else:
             raise RuntimeError('Only RapidENet is implemented.')
         
@@ -126,14 +128,14 @@ class Experiment:
     def set_metric_by_name(self, name):
         if name ==  'WeightedSELoss':
             criteria = WeightedSELoss(selection=(True if name == self.args['selection_criteria'] else False))
-            # if self.args['GPU']:
-            #     criteria = nn.DataParallel(criteria)
-            #     criteria = criteria.to(self.device)
+            if self.args['GPU']:
+                #criteria = nn.DataParallel(criteria)
+                criteria = criteria.cuda(0)
         if name ==  'PearsonCorrelationLoss':
             criteria = PearsonCorrelationLoss(selection=(True if name == self.args['selection_criteria'] else False))
-            # if self.args['GPU']:
-            #     criteria = nn.DataParallel(criteria)
-            #     criteria = criteria.to(self.device)
+            if self.args['GPU']:
+                criteria = criteria.cuda(0)
+                #criteria = criteria.to(self.device)
 
        
         
@@ -159,7 +161,7 @@ class Experiment:
     def prepare_data_loader(self, dframe, batch_size, dataset_name):
         dataset = RapidEDataset(dframe, self.args['data_dir_path'], self.df_pollen_types, load=self.args['load_entire_dataset'], name = dataset_name, preloaded_dict=self.preloaded_dict)
         stratified_train_sampler = StratifiedSampler(torch.from_numpy(np.array(list(dframe['CLUSTER']))), batch_size)
-        return DataLoader(dataset, batch_size=batch_size, sampler = stratified_train_sampler, collate_fn=my_collate)
+        return DataLoader(dataset, batch_size=batch_size, sampler = stratified_train_sampler, collate_fn=my_collate, pin_memory=True)
 
     
     def tune_hparam(self, inner):

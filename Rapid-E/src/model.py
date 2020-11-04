@@ -315,55 +315,55 @@ class RapidENetCUDA(nn.Module):
         print(train_batch_target)
         
 
-        # numpart_per_hour = list(map(lambda x: x.shape[0], scatters))
-        # #y = torch.zeros((len(scatters), self.number_of_classes))   # create a new variable which will contain outputs for each hour
-        # # x is a data for ONE HOUR
-        # scatters = [self.scatterConv1(x) for x in scatters] 
-        # #print(sum(numpart_per_hour))
-        # #catted = self.batchNormScatter(torch.cat(scatters, dim=0))
-        # #print(catted.shape)
-        # scatters = torch.split(self.batchNormScatter(torch.cat(scatters, dim=0)), numpart_per_hour, dim=0)
-        # scatters = [self.scatterConv2(x) for x in scatters]
-        # #print(scatters[0].shape)
-        # spectrums = [self.spectrumnConv1(x) for x in spectrums]
-        # spectrums = torch.split(self.batchNormSpectrum(torch.cat(spectrums, dim=0)), numpart_per_hour, dim=0)
-        # spectrums = [self.spectrumnConv2(x) for x in spectrums]
-        # #print(spectrums[0].shape)
+        numpart_per_hour = list(map(lambda x: x.shape[0], scatters))
+        #y = torch.zeros((len(scatters), self.number_of_classes))   # create a new variable which will contain outputs for each hour
+        # x is a data for ONE HOUR
+        scatters = [self.scatterConv1(x) for x in scatters] 
+        #print(sum(numpart_per_hour))
+        #catted = self.batchNormScatter(torch.cat(scatters, dim=0))
+        #print(catted.shape)
+        scatters = torch.split(self.batchNormScatter(torch.cat(scatters, dim=0)), numpart_per_hour, dim=0)
+        scatters = [self.scatterConv2(x) for x in scatters]
+        #print(scatters[0].shape)
+        spectrums = [self.spectrumnConv1(x) for x in spectrums]
+        spectrums = torch.split(self.batchNormSpectrum(torch.cat(spectrums, dim=0)), numpart_per_hour, dim=0)
+        spectrums = [self.spectrumnConv2(x) for x in spectrums]
+        #print(spectrums[0].shape)
         
     
-        # lifetimes1 = [self.lifetimeConv1(x) for x in lifetimes1]
-        # lifetimes1 = torch.split(self.batchNormLifetime1(torch.cat(lifetimes1, dim=0)), numpart_per_hour, dim=0)
-        # lifetimes1 = [self.lifetimeConv2(x) for x in lifetimes1]
-        # lifetimes1 = torch.split(self.batchNormLifetime2(torch.cat(lifetimes1, dim=0)), numpart_per_hour, dim=0)
-        # lifetimes1 = [self.lifetimeConv3(x) for x in lifetimes1]
-        # #print(lifetimes1[0].shape)
+        lifetimes1 = [self.lifetimeConv1(x) for x in lifetimes1]
+        lifetimes1 = torch.split(self.batchNormLifetime1(torch.cat(lifetimes1, dim=0)), numpart_per_hour, dim=0)
+        lifetimes1 = [self.lifetimeConv2(x) for x in lifetimes1]
+        lifetimes1 = torch.split(self.batchNormLifetime2(torch.cat(lifetimes1, dim=0)), numpart_per_hour, dim=0)
+        lifetimes1 = [self.lifetimeConv3(x) for x in lifetimes1]
+        #print(lifetimes1[0].shape)
         
         
-        # # PREPARE FOR FC LAYERS
+        # PREPARE FOR FC LAYERS
         
-        # scatters = [x.view(x.shape[0],3000) for x in scatters]
-        # scatters = torch.split(self.batchNormFCScatter(torch.cat(scatters, dim=0)), numpart_per_hour, dim=0)
-        # spectrums = [x.view(x.shape[0],800) for x in spectrums]
-        # spectrums = torch.split(self.batchNormFCSpectrum(torch.cat(spectrums, dim=0)), numpart_per_hour, dim=0)
-        # lifetimes1 = [x.view(x.shape[0],400) for x in lifetimes1]
-        # lifetimes1 = torch.split(self.batchNormFCLifetime(torch.cat(lifetimes1, dim=0)), numpart_per_hour, dim=0)
+        scatters = [x.view(x.shape[0],3000) for x in scatters]
+        scatters = torch.split(self.batchNormFCScatter(torch.cat(scatters, dim=0)), numpart_per_hour, dim=0)
+        spectrums = [x.view(x.shape[0],800) for x in spectrums]
+        spectrums = torch.split(self.batchNormFCSpectrum(torch.cat(spectrums, dim=0)), numpart_per_hour, dim=0)
+        lifetimes1 = [x.view(x.shape[0],400) for x in lifetimes1]
+        lifetimes1 = torch.split(self.batchNormFCLifetime(torch.cat(lifetimes1, dim=0)), numpart_per_hour, dim=0)
         
         
-        # scatters = [self.FCScatter(x) for x in scatters]
-        # spectrums = [self.FCSpectrum(x) for x in spectrums]
-        # lifetimes1 = [self.FCLifetime1(x) for x in lifetimes1]
-        # lifetimes2 = [self.FCLifetime2(x) for x in lifetimes2]
-        # sizes = [self.FCSize(x) for x in sizes]
+        scatters = [self.FCScatter(x) for x in scatters]
+        spectrums = [self.FCSpectrum(x) for x in spectrums]
+        lifetimes1 = [self.FCLifetime1(x) for x in lifetimes1]
+        lifetimes2 = [self.FCLifetime2(x) for x in lifetimes2]
+        sizes = [self.FCSize(x) for x in sizes]
 
-        # features = [ torch.cat((sc, sp, lf1, lf2, sz), dim=1) for (sc, sp, lf1, lf2, sz) in zip(scatters,spectrums,lifetimes1, lifetimes2, sizes)]
-        # features = torch.split(self.batchNormFinal(torch.cat(features, dim=0)), numpart_per_hour, dim=0)
-        # ouputs = [self.FCFinal(x) for x in features]
+        features = [ torch.cat((sc, sp, lf1, lf2, sz), dim=1) for (sc, sp, lf1, lf2, sz) in zip(scatters,spectrums,lifetimes1, lifetimes2, sizes)]
+        features = torch.split(self.batchNormFinal(torch.cat(features, dim=0)), numpart_per_hour, dim=0)
+        ouputs = [self.FCFinal(x) for x in features]
         
-        # outputs = torch.stack([torch.sum(x,dim=0) for x in ouputs], dim=0)
-        # outputs = (outputs - torch.mean(outputs, dim=0)) / torch.std(outputs, dim = 0)
-        # #print(outputs[:,-1])
+        outputs = torch.stack([torch.sum(x,dim=0) for x in ouputs], dim=0)
+        outputs = (outputs - torch.mean(outputs, dim=0)) / torch.std(outputs, dim = 0)
+        #print(outputs[:,-1])
         
-        # loss = self.obj_loss(outputs[:,-1], train_batch_target, train_batch_weights)
-        loss = 0.0
+        loss = self.obj_loss(outputs[:,-1], train_batch_target, train_batch_weights)
+        print(loss)
         
         return loss

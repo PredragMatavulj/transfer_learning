@@ -277,7 +277,7 @@ class Experiment:
                 #print(i)
                 #print(train_batch[0][0][1].shape)
                 
-                train_batch_data, train_batch_target, train_batch_weights = train_batch
+                #train_batch_data, train_batch_target, train_batch_weights = train_batch
                 
                 #train_batch_data = train_batch_data.to(self.device)
                 #numpart_per_hour = list(map(lambda x: x[0].shape[0], train_batch_data))
@@ -292,8 +292,8 @@ class Experiment:
                 #train_batch_target = torch.tensor(list(map(lambda x: x[1], train_batch))).to(device)
                 #train_batch_weights = torch.tensor(list(map(lambda x: x[2], train_batch))).to(device)
                 
-                train_batch_target = train_batch_target.cuda(non_blocking=True)
-                train_batch_weights = train_batch_weights.cuda(non_blocking=True)
+                train_batch_target = torch.tensor(list(map(lambda x: x[1], train_batch))).cuda(non_blocking=True)
+                train_batch_weights = torch.tensor(list(map(lambda x: x[2], train_batch))).cuda(non_blocking=True)
                 #print('Data:')
                 #print(train_batch_target)
                 #print(train_batch_weights)

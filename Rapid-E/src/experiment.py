@@ -277,26 +277,32 @@ class Experiment:
                 #print(i)
                 #print(train_batch[0][0][1].shape)
                 
-                #train_batch_data, train_batch_target, train_batch_weights = train_batch
+                train_batch_data, train_batch_target, train_batch_weights = train_batch
                 
                 #train_batch_data = train_batch_data.to(self.device)
                 #numpart_per_hour = list(map(lambda x: x[0].shape[0], train_batch_data))
                 #print(numpart_per_hour)
                 #train_batch_target = train_batch[1].to(self.device)
                 #train_batch_weights = train_batch[2].to(self.device)
+                scatters = list(map(lambda x: x[0][0].cuda(non_blocking=True), train_batch))
+                spectrums = list(map(lambda x: x[0][1].cuda(non_blocking=True), train_batch))
+                lifetimes1 = list(map(lambda x: x[0][2].cuda(non_blocking=True), train_batch))
+                lifetimes2 = list(map(lambda x: x[0][3].cuda(non_blocking=True), train_batch))
+                sizes = list(map(lambda x: x[0][4].to(self.device).cuda(non_blocking=True), train_batch))
+                #train_batch_target = torch.tensor(list(map(lambda x: x[1], train_batch))).to(device)
+                #train_batch_weights = torch.tensor(list(map(lambda x: x[2], train_batch))).to(device)
                 
-                
-                
-                
+                train_batch_target = train_batch_target.cuda(non_blocking=True)
+                train_batch_weights = train_batch_weights.cuda(non_blocking=True)
                 #print('Data:')
                 #print(train_batch_target)
                 #print(train_batch_weights)
                 
                 
-                objective_batch_loss = self.model(train_batch, self.device)
+                train_batch_output = self.model(scatters, spectrums, lifetimes1, lifetimes2, sizes)
                 #print(objective_batch_loss)
                 
-                #objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
+                objective_batch_loss = self.criteria['objective_criteria'](train_batch_output, train_batch_target, train_batch_weights)
                 
                 
                 self.optimizer.zero_grad()

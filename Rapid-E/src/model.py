@@ -300,19 +300,13 @@ class RapidENetCUDA(nn.Module):
     
  
 
-    def forward(self, train_batch, device):  # red: spec, scat, life1, life2, size
-        
-        scatters = list(map(lambda x: x[0][0].to(device), train_batch))
-        spectrums = list(map(lambda x: x[0][1].to(device), train_batch))
-        lifetimes1 = list(map(lambda x: x[0][2].to(device), train_batch))
-        lifetimes2 = list(map(lambda x: x[0][3].to(device), train_batch))
-        sizes = list(map(lambda x: x[0][4].to(device), train_batch))
-        train_batch_target = torch.tensor(list(map(lambda x: x[1], train_batch))).to(device)
-        train_batch_weights = torch.tensor(list(map(lambda x: x[2], train_batch))).to(device)
+    def forward(self, scatters, spectrums, lifetimes1, lifetimes2, sizes):  # red: spec, scat, life1, life2, size
         
         
-        print(len(scatters))
-        print(train_batch_target)
+        
+        
+        #print(len(scatters))
+        #print(train_batch_target)
         
 
         numpart_per_hour = list(map(lambda x: x.shape[0], scatters))
@@ -363,7 +357,7 @@ class RapidENetCUDA(nn.Module):
         outputs = (outputs - torch.mean(outputs, dim=0)) / torch.std(outputs, dim = 0)
         #print(outputs[:,-1])
         
-        loss = self.obj_loss(outputs[:,-1], train_batch_target, train_batch_weights)
-        print(loss)
+        #loss = self.obj_loss(outputs[:,-1], train_batch_target, train_batch_weights)
+        print(outputs)
         
-        return loss
+        return outputs[:,-1]

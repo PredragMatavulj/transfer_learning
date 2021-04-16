@@ -1,0 +1,15 @@
+{
+  "num_of_epochs" : 20,
+  "learning_rate" : 0.1,
+  "optimizer" : "SGD",
+  "gpu": true,
+  "num_of_gpus" : 3,
+  "loss_type": "WeightedCrossEntropy",
+  "dropout_rate" : 0.5,
+  "num_of_folds": 1,
+  "train_batch_size": 20800,
+  "valid_batch_size": 5200,
+  "num_workers": 50,
+  "num_trials": 1,
+  "metrics": ["Accuracy", "Precision", "Recall"]
+}

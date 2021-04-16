@@ -69,15 +69,15 @@ class Trainer:
         # all columns
         if hyperparams is not None and type(hyperparams) == dict and hyperparams['optimizer'] == 'Adam':
             self.oPt = torch.optim.Adam(self.model.parameters(), lr=self.lRa, weight_decay=self.wDe)
-            self.sHd = torch.optim.lr_scheduler.ReduceLROnPlateau(self.oPt, patience=4, factor=0.8, verbose=False)
+            self.sHd = torch.optim.lr_scheduler.ReduceLROnPlateau(self.oPt, patience=5, factor=0.8, verbose=False)
 
         elif hyperparams is not None and type(hyperparams) == dict and hyperparams['optimizer'] == 'SGD':
             self.oPt = torch.optim.SGD(self.model.parameters(), lr=self.lRa, weight_decay=self.wDe)
-            self.sHd = torch.optim.lr_scheduler.ReduceLROnPlateau(self.oPt, patience=4, factor=0.8, verbose=False)
+            self.sHd = torch.optim.lr_scheduler.ReduceLROnPlateau(self.oPt, patience=5, factor=0.8, verbose=False)
 
         elif hyperparams is None:
             self.oPt = torch.optim.Adam(self.model.parameters(), lr=self.lRa, weight_decay=self.wDe)
-            self.sHd = torch.optim.lr_scheduler.ReduceLROnPlateau(self.oPt, patience=4, factor=0.8, verbose=False)
+            self.sHd = torch.optim.lr_scheduler.ReduceLROnPlateau(self.oPt, patience=5, factor=0.8, verbose=False)
 
         else:
             logging.error('Optimizer unsupported.')
@@ -106,6 +106,7 @@ class Trainer:
                 self.lRa = trial.suggest_loguniform("alpha", 1e-5, 1e-1)
                 get_model(self.model).dropout_rate = trial.suggest_float("dropout_rate", 0.0, 1.0)
                 self.wDe = trial.suggest_float("weight_decay", 0.0, 1.0)
+                self.nEp = 20
             else:
                 logging.error('HyperOptTrial must be an instance of optuna.trial.Trial')
 
@@ -182,6 +183,11 @@ class Trainer:
             if self.writer is not None:
                 self.writer.add_scalars('loss', tb_dict, epoch + 1)
                 self.writer.add_scalars('accuracy', ac_dict, epoch + 1)
+
+            if self.oPt.param_groups[0]['lr'] < 1e-10:
+                print('Learning rate is too small (<1e-10). Training process is interrupted.')
+                break;
+
 
 
 
